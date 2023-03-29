@@ -15,7 +15,7 @@ public class Initialization {
     private static String createFolder(String folderName) {
         File folder = new File(folderName);
         folder.mkdirs();
-        return folder.getAbsolutePath() + "/";
+        return folder.getAbsolutePath();
     }
     private static void createMetadataFile() {
         File file = new File(Metadata.getCSVFileLocation());
@@ -33,9 +33,9 @@ public class Initialization {
         if(isInitialized()) {
             return;
         }
-        String root1 = createFolder(DBApp.getRootDatabaseFolder() + "DBEngine");
+        String root1 = createFolder(DBApp.getRootDatabaseFolder() + "/DBEngine");
         createMetadataFile();
-        String root2 = createFolder(root1 + "tables");
+        String root2 = createFolder(root1 + "/tables");
         Serializer.serialize(root2 + "/serializedTablesInfo.txt", new HashMap<>());
     }
 
