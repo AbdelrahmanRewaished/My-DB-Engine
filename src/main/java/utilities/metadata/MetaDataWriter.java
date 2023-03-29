@@ -4,6 +4,7 @@ import com.opencsv.CSVWriter;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Hashtable;
 import java.util.Map;
 
 public class MetaDataWriter {
@@ -12,7 +13,7 @@ public class MetaDataWriter {
 
     private MetaDataWriter() {
         try {
-            writer = new CSVWriter(new FileWriter( Metadata.csvFileLocation, true));
+            writer = new CSVWriter(new FileWriter( Metadata.getCSVFileLocation(), true));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -23,7 +24,7 @@ public class MetaDataWriter {
         }
         return instance;
     }
-    public static void addTableInfo(String tableName, String clusteringKey, Map<String, String> colNameType, Map<String, String> colNameMin, Map<String, String> colNameMax) {
+    public static void addTableInfo(String tableName, String clusteringKey, Hashtable<String, String> colNameType, Map<String, String> colNameMin, Map<String, String> colNameMax) {
         for(String columnName: colNameType.keySet()) {
             String type = colNameType.get(columnName);
             String minValue = colNameMin.get(columnName), maxValue = colNameMax.get(columnName);

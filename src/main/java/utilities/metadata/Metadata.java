@@ -1,5 +1,10 @@
 package utilities.metadata;
 
-class Metadata {
-    public static final String csvFileLocation = System.getenv("ROOT_DATABASE_FOLDER") + "metadata.csv";
+import engine.DBApp;
+
+public class Metadata {
+    private static final String csvFileLocation = DBApp.getRootDatabaseFolder() + "/DBEngine/metadata.csv";
+    public static String getCSVFileLocation() {
+        return csvFileLocation;
+    }
 }

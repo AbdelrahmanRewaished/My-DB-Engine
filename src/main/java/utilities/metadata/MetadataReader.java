@@ -12,7 +12,7 @@ class MetadataReader{
     CSVParser parser;
     private MetadataReader() {
         try {
-            Reader reader = Files.newBufferedReader(Paths.get("C:\\Users\\dell\\Desktop\\test.csv"));
+            Reader reader = Files.newBufferedReader(Paths.get(Metadata.getCSVFileLocation()));
             parser = new CSVParser(reader, CSVFormat.DEFAULT);
         }
         catch (IOException e) {
