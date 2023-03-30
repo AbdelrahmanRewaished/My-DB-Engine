@@ -1,15 +1,25 @@
 package engine;
 
+import engine.operations.Creation;
 import engine.operations.Initialization;
+import engine.operations.Insertion;
 
 import java.util.Hashtable;
 import java.util.Iterator;
 
 public class DBApp {
 
-    private static final String RootDatabaseFolder = System.getenv("ROOT_DATABASE_FOLDER");
+    private static final String rootDatabaseFolder = System.getenv("ROOT_DATABASE_FOLDER");
+    private static final String tablesRootFolder = rootDatabaseFolder + "/DBEngine/tables/";
+    private static final String serializedTablesInfoLocation = tablesRootFolder + "serializedTablesInfo.txt";
     public static String getRootDatabaseFolder() {
-        return RootDatabaseFolder;
+        return rootDatabaseFolder;
+    }
+    public static String getTablesRootFolder() {
+        return tablesRootFolder;
+    }
+    public static String getSerializedTablesInfoLocation() {
+        return serializedTablesInfoLocation;
     }
     // execute at application startup
     public void init() {
@@ -33,7 +43,7 @@ public class DBApp {
                             Hashtable<String,String> htblColNameMax )
             throws DBAppException
     {
-
+        Creation.createTable(strTableName, strClusteringKeyColumn, htblColNameType, htblColNameMin, htblColNameMax);
     }
 
 
@@ -55,7 +65,7 @@ public class DBApp {
                                 Hashtable<String,Object> htblColNameValue)
             throws DBAppException
     {
-
+        Insertion.insertIntoTable(strTableName, htblColNameValue);
     }
 
 

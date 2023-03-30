@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 public class Deserializer {
+    private Deserializer(){}
     public static Serializable deserialize(String fileLocation) {
         try (FileInputStream fis = new FileInputStream(fileLocation);
              ObjectInputStream ois = new ObjectInputStream(fis)) {

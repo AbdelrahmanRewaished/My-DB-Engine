@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 public class Serializer {
+    private Serializer(){}
     public static void serialize(String fileLocation, Serializable serializable) {
         try (
             FileOutputStream fos = new FileOutputStream(fileLocation);

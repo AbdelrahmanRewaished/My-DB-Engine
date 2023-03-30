@@ -1,45 +1,26 @@
 package engine.operations;
 
 import engine.DBApp;
+import utilities.FileHandler;
 import utilities.metadata.Metadata;
 import utilities.serialization.Serializer;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 
 public class Initialization {
 
     private Initialization(){}
 
-    private static String createFolder(String folderName) {
-        File folder = new File(folderName);
-        folder.mkdirs();
-        return folder.getAbsolutePath();
-    }
     private static void createMetadataFile() {
-        File file = new File(Metadata.getCSVFileLocation());
-        try {
-            file.createNewFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    private static boolean isInitialized() {
-        File dir = new File(DBApp.getRootDatabaseFolder() + "/DBEngine");
-        return dir.exists();
+        FileHandler.createFile(Metadata.getCSVFileLocation());
     }
     public static void init() {
-        if(isInitialized()) {
+        if(FileHandler.isFileExisting(DBApp.getRootDatabaseFolder() + "/DBEngine")) {
             return;
         }
-        String root1 = createFolder(DBApp.getRootDatabaseFolder() + "/DBEngine");
+        String root1 = FileHandler.createFolder(DBApp.getRootDatabaseFolder() + "/DBEngine");
         createMetadataFile();
-        String root2 = createFolder(root1 + "/tables");
+        String root2 = FileHandler.createFolder(root1 + "/tables");
         Serializer.serialize(root2 + "/serializedTablesInfo.txt", new HashMap<>());
-    }
-
-    public static void main(String[] args) {
-        init();
     }
 }
