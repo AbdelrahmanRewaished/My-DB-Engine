@@ -70,7 +70,7 @@ public class Test {
     }
     private void updateFromTableTest() throws DBAppException {
         colNameValue = getColNameValue(new String[]{"name"}, new Object[]{"Maged"});
-        dbApp.updateTable(tableName, clusteringKey, colNameValue);
+        dbApp.updateTable(tableName, "1", colNameValue);
     }
     public static void main(String[] args) throws DBAppException {
         Test test = new Test();
@@ -79,8 +79,7 @@ public class Test {
         test.insertMultipleValueIntoTablesTest();
 
         test.deleteFromTableTest();
-//        System.out.println(Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation()));
+        System.out.println(Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation()));
         test.updateFromTableTest();
-//        FileHandler.deleteDatabaseRootFolder();
     }
 }

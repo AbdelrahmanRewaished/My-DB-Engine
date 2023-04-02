@@ -36,7 +36,7 @@ public class Update {
         int pageContainingKeyIndex = findPageInfoIndex(table, clusteringKeyValue);
         checkIfPrimaryKeyMissing(table, clusteringKeyValue, pageContainingKeyIndex);
         PageInfo pageInfo = table.getPagesInfo().get(pageContainingKeyIndex);
-        Page page = (Page) Deserializer.deserialize(pageInfo.getLocation());
+        Page page = Page.deserializePage(pageInfo);
         int requiredRecordIndex = findRecordIndex(page, table.getClusteringKey(), clusteringKeyValue);
         checkIfPrimaryKeyMissing(table, clusteringKeyValue, requiredRecordIndex);
         page.updateRecord(requiredRecordIndex, colNameNewValue);

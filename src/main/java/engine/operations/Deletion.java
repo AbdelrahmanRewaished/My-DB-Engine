@@ -34,8 +34,8 @@ public class Deletion {
             return 0;
         }
         // Binary search over records in the Page found
-        String requiredPageLocation = table.getPagesInfo().get(requiredPageIndexToDeleteFrom).getLocation();
-        Page page = (Page) Deserializer.deserialize(requiredPageLocation);
+        PageInfo pageInfo = table.getPagesInfo().get(requiredPageIndexToDeleteFrom);
+        Page page = Page.deserializePage(pageInfo);
         int requiredRecordIndex = KeySearching.findRecordIndex(page, clusteringKey, (Comparable) colNameValue.get(clusteringKey));
         if(requiredRecordIndex == -1) {
             return 0;
@@ -51,7 +51,7 @@ public class Deletion {
             Serializer.serialize(page.getPageInfo().getLocation(), page);
         }
         else {
-            FileHandler.deleteFile(requiredPageLocation);
+            FileHandler.deleteFile(pageInfo.getLocation());
         }
         return 1;
     }
@@ -59,7 +59,8 @@ public class Deletion {
         int recordsDeleted = 0;
         for(int i = 0; i < table.getPagesInfo().size();) {
             PageInfo currentPageInfo = table.getPagesInfo().get(i);
-            Page currentPage = (Page)Deserializer.deserialize(currentPageInfo.getLocation());
+            Page currentPage = Page.deserializePage(currentPageInfo);
+            currentPage.setPageInfo(currentPageInfo);
             for(int j = 0; j < currentPage.size();) {
                 Record currentRecord = currentPage.get(j);
                 boolean toDeleteRecord = areInputValuesMatchingCurrentRecord(currentRecord, colNameValue);

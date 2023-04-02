@@ -9,8 +9,8 @@ import java.util.Iterator;
 public class DBApp {
 
     private static final String rootDatabaseFolder = System.getenv("ROOT_DATABASE_FOLDER") + "/DBEngine";
-    private static final String tablesRootFolder = rootDatabaseFolder + "/tables";
-    private static final String serializedTablesInfoLocation = tablesRootFolder + "/serializedTablesInfo.txt";
+    private static final String tablesRootFolder = rootDatabaseFolder + "/tables/";
+    private static final String serializedTablesInfoLocation = tablesRootFolder + "serializedTablesInfo.txt";
     public static String getRootDatabaseFolder() {
         return rootDatabaseFolder;
     }
