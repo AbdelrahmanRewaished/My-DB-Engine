@@ -29,7 +29,7 @@ public class MetaDataWriter {
             String type = colNameType.get(columnName);
             String minValue = colNameMin.get(columnName), maxValue = colNameMax.get(columnName);
             String isClusteringKey = columnName.equals(clusteringKey) + "";
-            String[] columnData = {tableName, columnName, type, isClusteringKey, minValue, maxValue};
+            String[] columnData = {tableName, columnName, type, isClusteringKey, null, null, minValue, maxValue};
             getInstance().writer.writeNext(columnData);
         }
         try {

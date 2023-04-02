@@ -1,7 +1,10 @@
 package utilities;
 
+import engine.DBApp;
+
 import java.io.File;
 import java.io.IOException;
+
 
 public class FileHandler {
     private FileHandler(){}
@@ -10,6 +13,10 @@ public class FileHandler {
         File folder = new File(location);
         folder.mkdirs();
         return folder.getAbsolutePath();
+    }
+    public static void deleteFile(String location) {
+        File file = new File(location);
+        file.delete();
     }
     public static void createFile(String location) {
         File file = new File(location);

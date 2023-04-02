@@ -5,16 +5,38 @@ import engine.DBAppException;
 import engine.elements.Page;
 import engine.elements.PageInfo;
 import engine.elements.Table;
-import utilities.metadata.Validator;
+import engine.elements.Record;
+import utilities.Validator;
 import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
 
 public class Insertion {
     private Insertion(){}
 
-    private static int getRequiredPageInfoIndex(Table table, Comparable element) throws DBAppException{
+
+    public static int getRequiredRecordIndex(Page page, String clusteringKey, Object keyValue) {
+        int left = 0, right = page.size() - 1;
+        while(left <= right) {
+            int mid = (left + right) / 2;
+            Hashtable<String, Object> currentRecord = page.get(mid);
+            Comparable currentClusteringKey = (Comparable) currentRecord.get(clusteringKey);
+            if(currentClusteringKey.compareTo(keyValue) > 0) {
+                right = mid - 1;
+            }
+            else if(currentClusteringKey.compareTo(keyValue) < 0) {
+                left = mid + 1;
+            }
+            else {
+                return -1;
+            }
+        }
+        return left;
+    }
+    public static int getRequiredPageInfoIndex(Table table, Object keyValue) {
         List<PageInfo> pages = table.getPagesInfo();
         int left = 0, right = pages.size() - 1;
         int mid = 0;
@@ -23,17 +45,17 @@ public class Insertion {
             PageInfo currentPage = pages.get(mid);
             Comparable min = currentPage.getMinimumContainedKey();
             Comparable max = currentPage.getMaximumContainedKey();
-            if(element.compareTo(min) < 0) {
+            if(min.compareTo(keyValue) > 0) {
                 right = mid - 1;
             }
-            else if(element.compareTo(max) > 0 && currentPage.isFull()) {
+            else if(max.compareTo(keyValue) < 0 && currentPage.isFull()) {
                 left = mid + 1;
             }
-            else if(element.compareTo(max) > 0) {
+            else if(max.compareTo(keyValue) < 0) {
                 return mid;
             }
-            else if(element.compareTo(max) == 0 || element.compareTo(min) == 0) {
-                throw new DBAppException(String.format("Primary key inserted already exists in Table '%s'", table.getName()));
+            else if(max.compareTo(keyValue) == 0 || min.compareTo(keyValue) == 0) {
+                return -1;
             }
             else {
                 return mid;
@@ -45,11 +67,9 @@ public class Insertion {
         if(left == 0) {
             return mid;
         }
-        if(pages.get(left - 1).getCurrentNumberOfRecords() < PageInfo.getMaxNumberOfRecords()) {
-            return left - 1;
-        }
         return left;
     }
+
     private static String getNextPageFileLocation(List<PageInfo> pagesInfo) {
         if(pagesInfo.isEmpty()) {
             return "/0.txt";
@@ -63,24 +83,7 @@ public class Insertion {
         table.addPageInfo(pageInfo);
         return new Page(pageInfo);
     }
-    private static int getRequiredRecordIndex(Page page, String clusteringKey, Object element) {
-        int left = 0, right = page.size() - 1;
-        while(left <= right) {
-            int mid = (left + right) / 2;
-            Hashtable<String, Object> currentRecord = page.get(mid);
-            Comparable currentClusteringKey = (Comparable) currentRecord.get(clusteringKey);
-            if(currentClusteringKey.compareTo(element) > 0) {
-                right = mid - 1;
-            }
-            else if(currentClusteringKey.compareTo(element) < 0) {
-                left = mid + 1;
-            }
-            else {
-                return -1;
-            }
-        }
-        return left;
-    }
+
     private static Page getPageToInsertIn(Table table, int requiredPageInfoIndex) {
         if(requiredPageInfoIndex == table.getPagesInfo().size()) {
             return addNewPage(table);
@@ -88,8 +91,8 @@ public class Insertion {
         PageInfo requiredPageInfo = table.getPagesInfo().get(requiredPageInfoIndex);
         return Page.deserializePage(requiredPageInfo);
     }
-    private static void checkIfPrimaryKeyAlreadyExists(Table table, Object clusteringValue, int requiredRecordIndex) throws DBAppException {
-        if(requiredRecordIndex == -1) {
+    private static void checkIfPrimaryKeyAlreadyExists(Table table, Object clusteringValue, int index) throws DBAppException {
+        if(index == -1) {
             throw new DBAppException(String.format("Primary Key of value '%s' already exists in Table '%s'", clusteringValue.toString(), table.getName()));
         }
     }
@@ -97,7 +100,7 @@ public class Insertion {
         List<PageInfo> pagesInfo = table.getPagesInfo();
         boolean isOutOfBound = true;
         while(nextPageIndex < pagesInfo.size() && isOutOfBound) {
-            Hashtable<String, Object> nextRecord = currentPage.removeLast(table.getClusteringKey());
+            Record nextRecord = currentPage.removeRecord(currentPage.size() - 1, table.getClusteringKey());
             Serializer.serialize(currentPage.getPageInfo().getLocation(), currentPage);
             PageInfo nextPageInfo = pagesInfo.get(nextPageIndex);
             currentPage = Page.deserializePage(nextPageInfo);
@@ -105,23 +108,24 @@ public class Insertion {
             nextPageIndex++;
         }
         if(isOutOfBound) {
-            Hashtable<String, Object> nextRecord = currentPage.removeLast(table.getClusteringKey());
+            Record nextRecord = currentPage.removeRecord(currentPage.size() - 1, table.getClusteringKey());
             Serializer.serialize(currentPage.getPageInfo().getLocation(), currentPage);
             currentPage = addNewPage(table);
             currentPage.addRecord(0, table.getClusteringKey(), nextRecord);
         }
         Serializer.serialize(currentPage.getPageInfo().getLocation(), currentPage);
     }
-    public static void insertIntoTable(String tableName, Hashtable<String, Object> colNameValue) throws DBAppException {
-        Validator.checkInsertionInputsValidity(tableName, colNameValue);
+    public static void insertIntoTable(String tableName, Record record) throws DBAppException {
+        Validator.checkInsertionInputsValidity(tableName, record);
         HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
         Table table = serializedTablesInfo.get(tableName);
-        Object clusteringValue = colNameValue.get(table.getClusteringKey());
-        int requiredPageInfoIndex = getRequiredPageInfoIndex(table, (Comparable)clusteringValue);
+        Object clusteringValue = record.get(table.getClusteringKey());
+        int requiredPageInfoIndex = getRequiredPageInfoIndex(table, clusteringValue);
+        checkIfPrimaryKeyAlreadyExists(table, clusteringValue, requiredPageInfoIndex);
         Page page = getPageToInsertIn(table, requiredPageInfoIndex);
         int requiredRecordIndex = getRequiredRecordIndex(page, table.getClusteringKey(), clusteringValue);
         checkIfPrimaryKeyAlreadyExists(table, clusteringValue, requiredRecordIndex);
-        boolean isOverFullPage = ! page.addRecord(requiredRecordIndex, table.getClusteringKey(), colNameValue);
+        boolean isOverFullPage = ! page.addRecord(requiredRecordIndex, table.getClusteringKey(), record);
         if(isOverFullPage) {
             adjustTablePages(table, requiredPageInfoIndex + 1, page);
         }

@@ -5,7 +5,7 @@ import engine.DBAppException;
 import engine.elements.Table;
 import utilities.FileHandler;
 import utilities.metadata.MetaDataWriter;
-import utilities.metadata.Validator;
+import utilities.Validator;
 import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
 

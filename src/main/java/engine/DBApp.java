@@ -1,17 +1,16 @@
 package engine;
 
-import engine.operations.Creation;
-import engine.operations.Initialization;
-import engine.operations.Insertion;
+import engine.operations.*;
+import engine.elements.Record;
 
 import java.util.Hashtable;
 import java.util.Iterator;
 
 public class DBApp {
 
-    private static final String rootDatabaseFolder = System.getenv("ROOT_DATABASE_FOLDER");
-    private static final String tablesRootFolder = rootDatabaseFolder + "/DBEngine/tables/";
-    private static final String serializedTablesInfoLocation = tablesRootFolder + "serializedTablesInfo.txt";
+    private static final String rootDatabaseFolder = System.getenv("ROOT_DATABASE_FOLDER") + "/DBEngine";
+    private static final String tablesRootFolder = rootDatabaseFolder + "/tables";
+    private static final String serializedTablesInfoLocation = tablesRootFolder + "/serializedTablesInfo.txt";
     public static String getRootDatabaseFolder() {
         return rootDatabaseFolder;
     }
@@ -22,6 +21,12 @@ public class DBApp {
         return serializedTablesInfoLocation;
     }
     // execute at application startup
+
+    private void printMessage(String message) {
+        System.out.println(message);
+        System.out.println();
+        System.out.println();
+    }
     public void init() {
         Initialization.init();
     }
@@ -44,6 +49,7 @@ public class DBApp {
             throws DBAppException
     {
         Creation.createTable(strTableName, strClusteringKeyColumn, htblColNameType, htblColNameMin, htblColNameMax);
+        printMessage(String.format("Table '%s' is created Successfully .", strTableName));
     }
 
 
@@ -55,7 +61,7 @@ public class DBApp {
     public void createIndex(String strTableName,
                             String[] strarrColName) throws DBAppException
     {
-
+        printMessage(String.format("Index is created successfully in Table '%s' on column '%s'", strTableName, strarrColName));
     }
 
 
@@ -65,7 +71,8 @@ public class DBApp {
                                 Hashtable<String,Object> htblColNameValue)
             throws DBAppException
     {
-        Insertion.insertIntoTable(strTableName, htblColNameValue);
+        Insertion.insertIntoTable(strTableName, new Record(htblColNameValue));
+        printMessage("Record is inserted Successfully .");
     }
 
 
@@ -78,7 +85,8 @@ public class DBApp {
                             Hashtable<String,Object> htblColNameValue )
             throws DBAppException
     {
-
+        Update.updateTable(strTableName, strClusteringKeyValue, new Record(htblColNameValue));
+        printMessage("Record is Updated Successfully .");
     }
 
     // following method could be used to delete one or more rows.
@@ -89,7 +97,8 @@ public class DBApp {
                                 Hashtable<String,Object> htblColNameValue)
             throws DBAppException
     {
-
+        int rowsDeleted = Deletion.deleteFromTable(strTableName, htblColNameValue);
+        printMessage(String.format("%d row(s) deleted", rowsDeleted));
     }
 
     public Iterator selectFromTable(SQLTerm[] arrSQLTerms,

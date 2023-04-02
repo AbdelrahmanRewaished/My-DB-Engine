@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Vector;
 
-public class Page extends Vector<Hashtable<String, Object>> {
+public class Page extends Vector<Record> {
     private PageInfo pageInfo;
     private static final long serialVersionUID = 4540224892639226411L;
 
@@ -22,34 +22,31 @@ public class Page extends Vector<Hashtable<String, Object>> {
     public void setPageInfo(PageInfo pageInfo) {
         this.pageInfo = pageInfo;
     }
-
-    private void adjustCurrentMaxClusteringValue(String clusteringKey, Hashtable<String, Object> record) {
-        Object clusteringValue = record.get(clusteringKey);
-        Comparable currentMaximum = pageInfo.getMaximumContainedKey();
-        Comparable newMaximum = currentMaximum != null && currentMaximum.compareTo(clusteringValue) > 0? currentMaximum: (Comparable) record.get(clusteringKey);
-        pageInfo.setMaximumContainedKey(newMaximum);
+    private void adjustCurrentMinAndMaxClusteringValue(String clusteringKey) {
+        pageInfo.setMinimumContainedKey((Comparable) get(0).get(clusteringKey));
+        pageInfo.setMaximumContainedKey((Comparable) get(size() - 1).get(clusteringKey));
     }
-    private void adjustCurrentMinClusteringValue(String clusteringKey, Hashtable<String, Object> record) {
-        Object clusteringValue = record.get(clusteringKey);
-        Comparable currentMinimum = pageInfo.getMinimumContainedKey();
-        Comparable newMinimum = currentMinimum != null && currentMinimum.compareTo(clusteringValue) < 0? currentMinimum: (Comparable) record.get(clusteringKey);
-        pageInfo.setMinimumContainedKey(newMinimum);
-    }
-    public boolean addRecord(int index, String clusteringKey, Hashtable<String, Object> record) {
+    public boolean addRecord(int index, String clusteringKey, Record record) {
         boolean isFull = pageInfo.isFull();
         add(index, record);
-        adjustCurrentMaxClusteringValue(clusteringKey, record);
-        adjustCurrentMinClusteringValue(clusteringKey, record);
+        adjustCurrentMinAndMaxClusteringValue(clusteringKey);
         pageInfo.incrementCurrentNumberOfRecords();
         return ! isFull;
     }
-    public Hashtable<String, Object> removeLast(String clusteringKey) {
-        Hashtable<String, Object> removed = remove(size() - 1);
+    public Record removeRecord(int index, String clusteringKey) {
+        Record removed = remove(index);
         pageInfo.decrementCurrentNumberOfRecords();
         if(! isEmpty()) {
-            pageInfo.setMaximumContainedKey((Comparable) get(size() - 1).get(clusteringKey));
+            adjustCurrentMinAndMaxClusteringValue(clusteringKey);
         }
         return removed;
+    }
+    public void updateRecord(int index, Record colNameNewValue) {
+        Record requiredRecord = get(index);
+        for(String columnName: colNameNewValue.keySet()) {
+            Object newValue = colNameNewValue.get(columnName);
+            requiredRecord.putValue(columnName, newValue);
+        }
     }
     public static Page deserializePage(PageInfo pageInfo) {
         Page page = (Page) Deserializer.deserialize(pageInfo.getLocation());

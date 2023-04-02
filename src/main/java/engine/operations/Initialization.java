@@ -15,12 +15,12 @@ public class Initialization {
         FileHandler.createFile(Metadata.getCSVFileLocation());
     }
     public static void init() {
-        if(FileHandler.isFileExisting(DBApp.getRootDatabaseFolder() + "/DBEngine")) {
+        if(FileHandler.isFileExisting(DBApp.getRootDatabaseFolder())) {
             return;
         }
-        String root1 = FileHandler.createFolder(DBApp.getRootDatabaseFolder() + "/DBEngine");
+        FileHandler.createFolder(DBApp.getRootDatabaseFolder());
         createMetadataFile();
-        String root2 = FileHandler.createFolder(root1 + "/tables");
-        Serializer.serialize(root2 + "/serializedTablesInfo.txt", new HashMap<>());
+        FileHandler.createFolder(DBApp.getTablesRootFolder());
+        Serializer.serialize(DBApp.getSerializedTablesInfoLocation(), new HashMap<>());
     }
 }
