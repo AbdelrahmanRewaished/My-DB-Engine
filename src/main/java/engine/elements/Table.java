@@ -1,5 +1,6 @@
 package engine.elements;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +10,7 @@ public class Table implements Serializable {
     private List<PageInfo> pagesInfo;
     private final String name;
     private String clusteringKey;
+    @Serial
     private static final long serialVersionUID = 123456789L;
     public Table(String name, String folderLocation, String clusteringKey) {
         this.name = name;

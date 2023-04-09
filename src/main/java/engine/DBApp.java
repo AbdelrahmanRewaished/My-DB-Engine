@@ -107,4 +107,10 @@ public class DBApp {
     {
         return null;
     }
+
+    public Iterator parseSQL( StringBuffer strbufSQL ) throws
+            DBAppException
+    {
+        return null;
+    }
 }

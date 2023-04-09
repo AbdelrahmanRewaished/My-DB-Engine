@@ -1,12 +1,14 @@
 package engine.elements;
 
 
+import java.io.Serial;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
 public class Record extends Hashtable<String, Object> {
 
+    @Serial
     private static final long serialVersionUID = 208255039577813193L;
     public Record(Map<? extends String, ?> t) {
         super(t);

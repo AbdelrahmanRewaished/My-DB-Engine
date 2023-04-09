@@ -2,12 +2,14 @@ package engine.elements;
 
 import utilities.serialization.Deserializer;
 
+import java.io.Serial;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Vector;
 
 public class Page extends Vector<Record> {
     private PageInfo pageInfo;
+    @Serial
     private static final long serialVersionUID = 4540224892639226411L;
 
     public Page(PageInfo pageInfo) {

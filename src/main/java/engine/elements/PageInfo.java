@@ -5,9 +5,9 @@ import utilities.PropertiesReader;
 import java.io.Serializable;
 
 public class PageInfo implements Serializable {
-    private static int maxNumberOfRecords = PropertiesReader.getProperty("MaximumRowsCountinTablePage");
+    private static final int maxNumberOfRecords = PropertiesReader.getProperty("MaximumRowsCountinTablePage");
     private int currentNumberOfRecords;
-    private String location;
+    private final String location;
     private Comparable minimumContainedKey;
     private Comparable maximumContainedKey;
 
