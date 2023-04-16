@@ -76,6 +76,24 @@ public interface SQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitConditionList(SQLParser.ConditionListContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link SQLParser#deleteConditionList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDeleteConditionList(SQLParser.DeleteConditionListContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#tableReference}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTableReference(SQLParser.TableReferenceContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#tableReferencedConditionList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTableReferencedConditionList(SQLParser.TableReferencedConditionListContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link SQLParser#columnDefinition}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -117,4 +135,28 @@ public interface SQLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitLogicalOperator(SQLParser.LogicalOperatorContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#integer}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitInteger(SQLParser.IntegerContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#double}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDouble(SQLParser.DoubleContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#string}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitString(SQLParser.StringContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#date}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDate(SQLParser.DateContext ctx);
 }

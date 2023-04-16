@@ -2,6 +2,7 @@ package engine.elements;
 
 import utilities.PropertiesReader;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class PageInfo implements Serializable {
@@ -10,6 +11,9 @@ public class PageInfo implements Serializable {
     private final String location;
     private Comparable minimumContainedKey;
     private Comparable maximumContainedKey;
+
+    @Serial
+    private static final long serialVersionUID = 3147410295215563180L;
 
     public PageInfo(String location) {
         this.location = location;

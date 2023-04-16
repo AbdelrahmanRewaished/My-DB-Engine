@@ -6,19 +6,27 @@ import engine.elements.Page;
 import engine.elements.PageInfo;
 import engine.elements.Record;
 import engine.elements.Table;
+import engine.operations.paramters.DeleteFromTableParams;
 import utilities.FileHandler;
 import utilities.KeySearching;
-import utilities.Validator;
+import utilities.validation.Validator;
 import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
 
 import java.util.HashMap;
 import java.util.Hashtable;
 
-public class Deletion {
-    private Deletion(){}
+public class Deletion{
+    private final DeleteFromTableParams params;
+    private final String tableName;
+    private final Hashtable<String, Object> colNameValue;
+    public Deletion(DeleteFromTableParams params) {
+        this.params = params;
+        this.tableName = params.getTableName();
+        this.colNameValue = params.getColNameValue();
+    }
 
-    private static boolean areInputValuesMatchingCurrentRecord(Record currentRecord, Hashtable<String, Object> colNameValue) {
+    private boolean areInputValuesMatchingCurrentRecord(Record currentRecord) {
         for(String columnName: colNameValue.keySet()) {
             if(! currentRecord.get(columnName).equals(colNameValue.get(columnName))) {
                 return false;
@@ -26,7 +34,7 @@ public class Deletion {
         }
         return true;
     }
-    private static int deleteRecordContainingClusteringKey(Table table, Hashtable<String, Object> colNameValue) {
+    private int deleteRecordContainingClusteringKey(Table table) {
         // Binary Search over the Pages
         String clusteringKey = table.getClusteringKey();
         int requiredPageIndexToDeleteFrom = KeySearching.findPageToLookIn(table, colNameValue.get(clusteringKey));
@@ -43,7 +51,7 @@ public class Deletion {
         Record record = page.get(requiredRecordIndex);
         // Check if the all other values colNameValue exist in the record found
         // otherwise return 0
-        if(! areInputValuesMatchingCurrentRecord(record, colNameValue)) {
+        if(! areInputValuesMatchingCurrentRecord(record)) {
             return 0;
         }
         page.removeRecord(requiredRecordIndex, clusteringKey);
@@ -55,7 +63,7 @@ public class Deletion {
         }
         return 1;
     }
-    private static int deleteAllMatchingValues(Table table, Hashtable<String, Object> colNameValue) {
+    private int deleteAllMatchingValues(Table table) {
         int recordsDeleted = 0;
         for(int i = 0; i < table.getPagesInfo().size();) {
             PageInfo currentPageInfo = table.getPagesInfo().get(i);
@@ -63,7 +71,7 @@ public class Deletion {
             currentPage.setPageInfo(currentPageInfo);
             for(int j = 0; j < currentPage.size();) {
                 Record currentRecord = currentPage.get(j);
-                boolean toDeleteRecord = areInputValuesMatchingCurrentRecord(currentRecord, colNameValue);
+                boolean toDeleteRecord = areInputValuesMatchingCurrentRecord(currentRecord);
                 if(toDeleteRecord) {
                     currentPage.removeRecord(j, table.getClusteringKey());
                     recordsDeleted++;
@@ -83,19 +91,18 @@ public class Deletion {
         }
         return recordsDeleted;
     }
-    public static int deleteFromTable(String tableName, Hashtable<String, Object> colNameValue) throws DBAppException {
+    public synchronized int deleteFromTable() throws DBAppException {
         Validator.checkDeleteValidity(tableName, colNameValue);
         HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
         Table table = serializedTablesInfo.get(tableName);
         String clusteringKey = table.getClusteringKey();
         int recordsDeleted;
-        if(colNameValue.containsKey(clusteringKey)) {
-            recordsDeleted = deleteRecordContainingClusteringKey(table, colNameValue);
+        if (colNameValue.containsKey(clusteringKey)) {
+            recordsDeleted = deleteRecordContainingClusteringKey(table);
+        } else {
+            recordsDeleted = deleteAllMatchingValues(table);
         }
-        else {
-            recordsDeleted = deleteAllMatchingValues(table, colNameValue);
-        }
-        if(recordsDeleted > 0) {
+        if (recordsDeleted > 0) {
             Serializer.serialize(DBApp.getSerializedTablesInfoLocation(), serializedTablesInfo);
         }
         return recordsDeleted;

@@ -6,7 +6,8 @@ import engine.elements.Page;
 import engine.elements.PageInfo;
 import engine.elements.Table;
 import engine.elements.Record;
-import utilities.Validator;
+import engine.operations.paramters.InsertIntoTableParams;
+import utilities.validation.Validator;
 import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
 
@@ -15,10 +16,16 @@ import java.util.Hashtable;
 import java.util.List;
 
 public class Insertion {
-    private Insertion(){}
+    private InsertIntoTableParams params;
+    private String tableName;
+    private Record record;
+    public Insertion(InsertIntoTableParams params) {
+        this.params = params;
+        tableName = params.getTableName();
+        record = params.getRecord();
+    }
 
-
-    public static int getRequiredRecordIndex(Page page, String clusteringKey, Object keyValue) {
+    public int getRequiredRecordIndex(Page page, String clusteringKey, Object keyValue) {
         int left = 0, right = page.size() - 1;
         while(left <= right) {
             int mid = (left + right) / 2;
@@ -36,7 +43,7 @@ public class Insertion {
         }
         return left;
     }
-    public static int getRequiredPageInfoIndex(Table table, Object keyValue) {
+    public int getRequiredPageInfoIndex(Table table, Object keyValue) {
         List<PageInfo> pages = table.getPagesInfo();
         int left = 0, right = pages.size() - 1;
         int mid = 0;
@@ -70,7 +77,7 @@ public class Insertion {
         return left;
     }
 
-    private static String getNextPageFileLocation(List<PageInfo> pagesInfo) {
+    private String getNextPageFileLocation(List<PageInfo> pagesInfo) {
         if(pagesInfo.isEmpty()) {
             return "/0.txt";
         }
@@ -78,25 +85,25 @@ public class Insertion {
         int lastPageNumber = Integer.parseInt(splitter[splitter.length - 1].split(".txt")[0]);
         return "/" + (lastPageNumber + 1) + ".txt";
     }
-    private static Page addNewPage(Table table) {
+    private Page addNewPage(Table table) {
         PageInfo pageInfo = new PageInfo(table.getFolderLocation() + getNextPageFileLocation(table.getPagesInfo()));
         table.addPageInfo(pageInfo);
         return new Page(pageInfo);
     }
 
-    private static Page getPageToInsertIn(Table table, int requiredPageInfoIndex) {
+    private Page getPageToInsertIn(Table table, int requiredPageInfoIndex) {
         if(requiredPageInfoIndex == table.getPagesInfo().size()) {
             return addNewPage(table);
         }
         PageInfo requiredPageInfo = table.getPagesInfo().get(requiredPageInfoIndex);
         return Page.deserializePage(requiredPageInfo);
     }
-    private static void checkIfPrimaryKeyAlreadyExists(Table table, Object clusteringValue, int index) throws DBAppException {
+    private void checkIfPrimaryKeyAlreadyExists(Table table, Object clusteringValue, int index) throws DBAppException {
         if(index == -1) {
             throw new DBAppException(String.format("Primary Key of value '%s' already exists in Table '%s'", clusteringValue.toString(), table.getName()));
         }
     }
-    private static void adjustTablePages(Table table, int nextPageIndex, Page currentPage) {
+    private void adjustTablePages(Table table, int nextPageIndex, Page currentPage) {
         List<PageInfo> pagesInfo = table.getPagesInfo();
         boolean isOutOfBound = true;
         while(nextPageIndex < pagesInfo.size() && isOutOfBound) {
@@ -115,7 +122,7 @@ public class Insertion {
         }
         Serializer.serialize(currentPage.getPageInfo().getLocation(), currentPage);
     }
-    public static void insertIntoTable(String tableName, Record record) throws DBAppException {
+    public synchronized void insertIntoTable() throws DBAppException {
         Validator.checkInsertionInputsValidity(tableName, record);
         HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
         Table table = serializedTablesInfo.get(tableName);

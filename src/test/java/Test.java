@@ -2,22 +2,16 @@ import compiler.SQLLexer;
 import compiler.SQLParser;
 import engine.DBApp;
 import engine.DBAppException;
-import engine.elements.Page;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
-import utilities.DatabaseTypesHandler;
-import utilities.FileHandler;
-import utilities.serialization.Deserializer;
 
-import java.io.LineNumberInputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 
-import static utilities.DatabaseTypesHandler.*;
+import static utilities.datatypes.DatabaseTypesHandler.*;
 
 public class Test {
     private DBApp dbApp = new DBApp();
@@ -107,21 +101,16 @@ public class Test {
                 List<String> conditionValues = new ArrayList<>();
                 List<String> conditionColumns = new ArrayList<>();
                 List<String> logicalOperators = new ArrayList<>();
-                if(selectCtx.columnList() != null) {
-                    for (SQLParser.ColumnNameContext colCtx : selectCtx.columnList().columnName()) {
-                        columnNames.add(colCtx.getText());
-                    }
-                    SQLParser.ConditionListContext conCtx = selectCtx.conditionList();
-                    while(conCtx != null) {
-                        conditionColumns.add(conCtx.columnName().getText());
-                        operators.add(conCtx.operator().getText());
-                        conditionValues.add(conCtx.value().getText());
-                        if(conCtx.logicalOperator(0) != null)
-                            logicalOperators.add(conCtx.logicalOperator(0).getText());
-                        conCtx = conCtx.conditionList(0);
-                    }
+                SQLParser.ConditionListContext conCtx = selectCtx.conditionList();
+                while(conCtx != null) {
+                    conditionColumns.add(conCtx.columnName().getText());
+                    operators.add(conCtx.operator().getText());
+                    conditionValues.add(conCtx.value().getText());
+                    if(conCtx.logicalOperator(0) != null)
+                        logicalOperators.add(conCtx.logicalOperator(0).getText());
+                    conCtx = conCtx.conditionList(0);
                 }
-                System.out.println(String.format("Tables: %s\nSelected Columns: %s\nCondition Columns: %s\nOperators: %s\nCondition Values: %s\nLogical Operators: %s", tableNames, columnNames, conditionColumns, operators, conditionValues, logicalOperators));
+                System.out.println(String.format("Tables: %s\nSelected Columns: %s\nCondition Columns: %s\nOperators: %s\nCondition Values: %s\nLogical Operators: %s", tableNames, "Everything", conditionColumns, operators, conditionValues, logicalOperators));
                 break;
             case 'C':
                 SQLParser.CreateTableStatementContext createCtx = parser.createTableStatement();
@@ -154,26 +143,16 @@ public class Test {
                 tableName = updateCtx.tableName().getText();
                 columnNames = new ArrayList<>();
                 values = new ArrayList<>();
-                operators = new ArrayList<>();
-                conditionColumns = new ArrayList<>();
-                conditionValues = new ArrayList<>();
-                logicalOperators = new ArrayList<>();
+                String conditionColumn, operator = "=", conditionValue;
                 for(SQLParser.ColumnNameContext columnNameContext: updateCtx.updateList().columnName()) {
                     columnNames.add(columnNameContext.getText());
                 }
-                SQLParser.ConditionListContext conCtx = updateCtx.conditionList();
-                while(conCtx != null) {
-                    conditionColumns.add(conCtx.columnName().getText());
-                    operators.add(conCtx.operator().getText());
-                    conditionValues.add(conCtx.value().getText());
-                    if(conCtx.logicalOperator(0) != null)
-                        logicalOperators.add(conCtx.logicalOperator(0).getText());
-                    conCtx = conCtx.conditionList(0);
-                }
+                conditionColumn = updateCtx.columnName().getText();
+                conditionValue = updateCtx.value().getText();
                 for(SQLParser.ValueContext valueCtx: updateCtx.updateList().value()) {
                     values.add(valueCtx.getText());
                 }
-                System.out.println(String.format("Table: %s\nColumns: %s\nValues: %s\nCondition Columns: %s\nOperator: %s\nConditionValues: %s\nLogical Operators: %s", tableName, columnNames, values, conditionColumns, operators, conditionValues, logicalOperators));
+                System.out.println(String.format("Table: %s\nColumns: %s\nValues: %s\nCondition Columns: %s\nOperator: %s\nConditionValues: %s", tableName, columnNames, values, conditionColumn, operator, conditionValue));
                 break;
 
             case 'D':
@@ -181,29 +160,40 @@ public class Test {
                 if(parser.getNumberOfSyntaxErrors() > 0) {
                     break;
                 }
-                System.out.println(deleteCtx.conditionList().getText());
+                System.out.println(deleteCtx.deleteConditionList().getText());
                 tableName = deleteCtx.tableName().getText();
                 conditionColumns = new ArrayList<>();
-                operators = new ArrayList<>();
                 conditionValues = new ArrayList<>();
                 logicalOperators = new ArrayList<>();
-                conCtx = deleteCtx.conditionList();
-                while(conCtx != null) {
-                    conditionColumns.add(conCtx.columnName().getText());
-                    operators.add(conCtx.operator().getText());
-                    conditionValues.add(conCtx.value().getText());
-                    if(conCtx.logicalOperator(0) != null)
-                        logicalOperators.add(conCtx.logicalOperator(0).getText());
-                    conCtx = conCtx.conditionList(0);
+                SQLParser.DeleteConditionListContext deleteConditionList = deleteCtx.deleteConditionList();
+                while(deleteConditionList != null) {
+                    conditionColumns.add(deleteConditionList.columnName().getText());
+                    conditionValues.add(deleteConditionList.value().getText());
+                    if(deleteConditionList.logicalOperator(0) != null)
+                        logicalOperators.add(deleteConditionList.logicalOperator(0).getText());
+                    deleteConditionList = deleteConditionList.deleteConditionList(0);
                 }
-                System.out.println(String.format("Table: %s\nCondition Columns: %s\nOperator: %s\nCondition values: %s\nLogical Operators: %s", tableName, conditionColumns, operators, conditionValues, logicalOperators));
+                System.out.println(String.format("Table: %s\nCondition Columns: %s\nCondition values: %s\nLogical Operators: %s", tableName, conditionColumns, conditionValues, logicalOperators));
                 break;
             default:
-                break;
+                parser.query();
         }
     }
     public static void main(String[] args) throws DBAppException {
         Test test = new Test();
-        test.testSQLStatement("SELEC id, name, birthdate FROM Employee WHERE name = ahmed AND age = 13 OR birthdate > 2002-03-01");
+        String statement = "CREATE TABLE Employee(id INT PRIMARY KEY, name VARCHAR(20))";
+        // Create a CharStream from the SQL statement
+        CharStream input = CharStreams.fromString(statement);
+        // Create a lexer from the input
+        SQLLexer lexer = new SQLLexer(input);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+        // Create a parser from the tokens
+        SQLParser parser = new SQLParser(tokens);
+        SQLParser.CreateTableStatementContext createTableStatementContext = parser.createTableStatement();
+        System.out.println(createTableStatementContext.columnDefinition(1).dataType().integer().getText());
+//        SQLParser.QueryContext queryCtx = parser.query();
+
+//        queryCtx.selectStatement();
     }
 }

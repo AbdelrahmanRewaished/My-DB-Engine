@@ -12,6 +12,9 @@ public class FileHandler {
         folder.mkdirs();
         return folder.getAbsolutePath();
     }
+    public static void deleteFolder(String location) {
+        deleteFile(location);
+    }
     public static void deleteFile(String location) {
         File file = new File(location);
         file.delete();

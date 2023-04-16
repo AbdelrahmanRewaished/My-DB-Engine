@@ -1,8 +1,17 @@
 package engine;
 
+import engine.elements.Table;
 import engine.operations.*;
 import engine.elements.Record;
+import engine.operations.Creation;
+import engine.operations.Deletion;
+import engine.operations.Insertion;
+import engine.operations.Selection;
+import engine.operations.Update;
+import engine.operations.paramters.*;
+import utilities.serialization.Deserializer;
 
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 
@@ -48,8 +57,9 @@ public class DBApp {
                             Hashtable<String,String> htblColNameMax )
             throws DBAppException
     {
-        Creation.createTable(strTableName, strClusteringKeyColumn, htblColNameType, htblColNameMin, htblColNameMax);
-        printMessage(String.format("Table '%s' is created Successfully .", strTableName));
+        CreateTableParams createTableParams = new CreateTableParams(strTableName, strClusteringKeyColumn, htblColNameType, htblColNameMin, htblColNameMax);
+        new Creation(createTableParams).createTable();
+        printMessage(String.format("Table '%s' created Successfully .", strTableName));
     }
 
 
@@ -71,8 +81,8 @@ public class DBApp {
                                 Hashtable<String,Object> htblColNameValue)
             throws DBAppException
     {
-        Insertion.insertIntoTable(strTableName, new Record(htblColNameValue));
-        printMessage("Record is inserted Successfully .");
+        new Insertion(new InsertIntoTableParams(strTableName, new Record(htblColNameValue))).insertIntoTable();
+        printMessage("1 Row Affected");
     }
 
 
@@ -85,8 +95,8 @@ public class DBApp {
                             Hashtable<String,Object> htblColNameValue )
             throws DBAppException
     {
-        Update.updateTable(strTableName, strClusteringKeyValue, new Record(htblColNameValue));
-        printMessage("Record is Updated Successfully .");
+        new Update(new UpdateTableParams(strTableName, strClusteringKeyValue, new Record(htblColNameValue))).updateTable();
+        printMessage("1 Row Affected");
     }
 
     // following method could be used to delete one or more rows.
@@ -97,7 +107,7 @@ public class DBApp {
                                 Hashtable<String,Object> htblColNameValue)
             throws DBAppException
     {
-        int rowsDeleted = Deletion.deleteFromTable(strTableName, htblColNameValue);
+        int rowsDeleted = new Deletion(new DeleteFromTableParams(strTableName, htblColNameValue)).deleteFromTable();
         printMessage(String.format("%d row(s) deleted", rowsDeleted));
     }
 
@@ -105,12 +115,49 @@ public class DBApp {
                                     String[] strarrOperators)
             throws DBAppException
     {
-        return null;
+        return new Selection(new SelectFromTableParams(arrSQLTerms, strarrOperators)).select();
     }
 
     public Iterator parseSQL( StringBuffer strbufSQL ) throws
             DBAppException
     {
-        return null;
+        DBParser parser = new DBParser(strbufSQL.toString());
+        if(parser.isHavingSyntaxError()) {
+            throw new DBAppException("Invalid Statement");
+        }
+        switch(parser.getCommandType()) {
+            case "SELECT":
+                SelectFromTableParams sp = parser.getSelectionParams();
+                return selectFromTable(sp.getSqlTerms(), sp.getLogicalOperators());
+            case "CREATE":
+                CreateTableParams cp = parser.getCreationParams();
+                createTable(cp.getTableName(), cp.getClusteringKey(), cp.getColNameType(), cp.getColNameMin(), cp.getColNameMax());
+                return null;
+            case "INSERT":
+                InsertIntoTableParams ip = parser.getInsertionParams();
+                insertIntoTable(ip.getTableName(), ip.getRecord());
+                return null;
+            case "UPDATE":
+                UpdateTableParams up = parser.getUpdateParams();
+                updateTable(up.getTableName(), up.getClusteringKeyValue(), up.getColNameValue());
+                return null;
+            case "DELETE":
+                DeleteFromTableParams dp = parser.getDeletionParams();
+                deleteFromTable(dp.getTableName(), dp.getColNameValue());
+                return null;
+            default:
+                return null;
+        }
+    }
+    public void dropTable(String strTableName) throws DBAppException {
+        new Dropping(strTableName).drop();
+        printMessage("Table deleted successfully");
+    }
+
+    public static void main(String[] args) throws DBAppException {
+        DBApp dbApp = new DBApp();
+        dbApp.dropTable("Employee");
+//        dbApp.parseSQL(new StringBuffer("CREATE TABLE Employee (id INT PRIMARY KEY, name VARCHAR(20), salary FLOAT, birthdate DATE)"));
+//        dbApp.parseSQL(new StringBuffer("CREATE TABLE Manager (id INT PRIMARY KEY, name VARCHAR(20), depId INT)"));
     }
 }

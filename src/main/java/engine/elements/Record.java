@@ -14,6 +14,9 @@ public class Record extends Hashtable<String, Object> {
         super(t);
     }
 
+    public Record() {
+    }
+
     public void putValue(String columnName, Object value) {
         super.put(columnName, value);
     }

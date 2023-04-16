@@ -2,19 +2,19 @@ grammar SQL;
 
 query: selectStatement | insertStatement | updateStatement | deleteStatement | createTableStatement ;
 
-selectStatement: SELECT columnList FROM tableList WHERE conditionList | SELECT columnList FROM tableList | SELECT '*' FROM tableList | SELECT '*' FROM tableList WHERE conditionList;
+selectStatement:  SELECT '*' FROM tableName WHERE conditionList |  SELECT '*' FROM tableList | SELECT '*' FROM tableList WHERE tableReferencedConditionList;
 
-insertStatement: INSERT INTO tableName columnList VALUES valueList ;
+insertStatement: INSERT INTO tableName '('columnList')' VALUES '('valueList')';
 
-updateStatement: UPDATE tableName SET updateList WHERE conditionList | UPDATE tableName SET updateList;
+updateStatement: UPDATE tableName SET updateList WHERE columnName '=' value | UPDATE tableName SET updateList;
 
-deleteStatement: DELETE FROM tableName WHERE conditionList | DELETE FROM tableName;
+deleteStatement: DELETE FROM tableName WHERE deleteConditionList | DELETE FROM tableName;
 
-createTableStatement: CREATE TABLE tableName '(' columnDefinition (',' columnDefinition)* ')' ;
+createTableStatement: CREATE TABLE tableName '(' columnDefinition PRIMARYKEY (',' columnDefinition)* ')' ;
 
 columnList: columnName (',' columnName)* ;
 
-tableList: tableName (',' tableName)* ;
+tableList: tableName tableReference (',' tableName tableReference)+ ;
 
 valueList: value (',' value)* ;
 
@@ -22,19 +22,35 @@ updateList: columnName '=' value (',' columnName '=' value)* ;
 
 conditionList: columnName operator value (logicalOperator conditionList)*;
 
-columnDefinition: columnName dataType ;
+deleteConditionList: columnName '=' value (logicalOperator deleteConditionList)*;
 
-dataType: INT | FLOAT | VARCHAR '(' (DIGIT)+ ')' | DATE ;
+tableReference: string;
+
+tableReferencedConditionList: tableReference + '.' + columnName operator value (logicalOperator tableReferencedConditionList)*;
+
+columnDefinition: columnName dataType;
+
+PRIMARYKEY: 'PRIMARY KEY';
+
+dataType: INT | FLOAT | VARCHAR '(' integer ')' | DATE ;
 
 columnName: (LETTER)+ (DIGIT)*;
 
 tableName: (LETTER)+ (DIGIT)*;
 
-value: (DIGIT)+ | (LETTER)+ | DIGIT DIGIT DIGIT DIGIT'-'DIGIT DIGIT'-'DIGIT DIGIT | (DIGIT)+'.'(DIGIT)+;
+value: integer | string | date | double;
 
 operator: '=' | '<' | '>' | '<=' | '>=' ;
 
 logicalOperator: AND | OR | XOR;
+
+integer: (DIGIT)+;
+
+double: (DIGIT)+'.'(DIGIT)+;
+
+string: (LETTER)+;
+
+date: DIGIT DIGIT DIGIT DIGIT'-'DIGIT DIGIT'-'DIGIT DIGIT;
 
 SELECT: 'SELECT' ;
 
@@ -70,7 +86,7 @@ FLOAT: 'FLOAT';
 
 VARCHAR: 'VARCHAR';
 
-DATE: 'Date';
+DATE: 'DATE';
 
 LETTER: [a-zA-Z] ;
 
