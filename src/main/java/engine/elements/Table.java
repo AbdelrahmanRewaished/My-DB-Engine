@@ -7,10 +7,9 @@ import java.util.Vector;
 
 public class Table implements Serializable {
     private final String folderLocation;
-    private Vector<PageInfo> pagesInfo;
+    private final List<PageInfo> pagesInfo;
     private final String name;
     private final String clusteringKey;
-    private List<String> columnNames;
     @Serial
     private static final long serialVersionUID = 123456789L;
     public Table(String name, String folderLocation, String clusteringKey) {
@@ -24,7 +23,7 @@ public class Table implements Serializable {
         return folderLocation;
     }
 
-    public Vector<PageInfo> getPagesInfo() {
+    public List<PageInfo> getPagesInfo() {
         return pagesInfo;
     }
 
@@ -42,9 +41,6 @@ public class Table implements Serializable {
         return clusteringKey;
     }
 
-    public void setColumnNames(List<String> columnNames) {
-        this.columnNames = columnNames;
-    }
 
     @Override
     public String toString() {

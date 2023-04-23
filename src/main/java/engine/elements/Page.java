@@ -4,7 +4,6 @@ import utilities.serialization.Deserializer;
 
 import java.io.Serial;
 import java.util.Arrays;
-import java.util.Hashtable;
 import java.util.Vector;
 
 public class Page extends Vector<Record> {
@@ -47,7 +46,7 @@ public class Page extends Vector<Record> {
         Record requiredRecord = get(index);
         for(String columnName: colNameNewValue.keySet()) {
             Object newValue = colNameNewValue.get(columnName);
-            requiredRecord.putValue(columnName, newValue);
+            requiredRecord.put(columnName, newValue);
         }
     }
     public static Page deserializePage(PageInfo pageInfo) {

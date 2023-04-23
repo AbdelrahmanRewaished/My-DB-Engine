@@ -1,5 +1,6 @@
 package engine;
 
+import engine.elements.PageInfo;
 import engine.elements.Table;
 import engine.operations.*;
 import engine.elements.Record;
@@ -11,9 +12,7 @@ import engine.operations.Update;
 import engine.operations.paramters.*;
 import utilities.serialization.Deserializer;
 
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
+import java.util.*;
 
 public class DBApp {
 
@@ -95,8 +94,8 @@ public class DBApp {
                             Hashtable<String,Object> htblColNameValue )
             throws DBAppException
     {
-        new Update(new UpdateTableParams(strTableName, strClusteringKeyValue, new Record(htblColNameValue))).updateTable();
-        printMessage("1 Row Affected");
+        int recordsUpdated = new Update(new UpdateTableParams(strTableName, strClusteringKeyValue, new Record(htblColNameValue))).updateTable();
+        printMessage(String.format("%d Row(s) Affected", recordsUpdated));
     }
 
     // following method could be used to delete one or more rows.
@@ -152,12 +151,5 @@ public class DBApp {
     public void dropTable(String strTableName) throws DBAppException {
         new Dropping(strTableName).drop();
         printMessage("Table deleted successfully");
-    }
-
-    public static void main(String[] args) throws DBAppException {
-        DBApp dbApp = new DBApp();
-        dbApp.dropTable("Employee");
-//        dbApp.parseSQL(new StringBuffer("CREATE TABLE Employee (id INT PRIMARY KEY, name VARCHAR(20), salary FLOAT, birthdate DATE)"));
-//        dbApp.parseSQL(new StringBuffer("CREATE TABLE Manager (id INT PRIMARY KEY, name VARCHAR(20), depId INT)"));
     }
 }

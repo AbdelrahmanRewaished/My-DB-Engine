@@ -4,6 +4,9 @@ package utilities.validation;
 import engine.DBAppException;
 import engine.elements.Record;
 import engine.operations.paramters.CreateTableParams;
+import engine.operations.paramters.DeleteFromTableParams;
+import engine.operations.paramters.InsertIntoTableParams;
+import engine.operations.paramters.UpdateTableParams;
 import org.apache.commons.csv.CSVRecord;
 import utilities.datatypes.DatabaseTypesHandler;
 import utilities.metadata.MetadataReader;
@@ -17,34 +20,18 @@ import static utilities.datatypes.DatabaseTypesHandler.*;
 public class Validator {
     private Validator() {}
 
-
-
-
-
-
-    // Insertion Validation
-
+    // Common Validation
     private static boolean isValueInRange(MetadataRecord currentRecord, Object value) {
         Comparable maximum = DatabaseTypesHandler.getObject(currentRecord.getMaxValue(), currentRecord.getColumnType());
+        if(value instanceof String) {
+            String strValue = (String) value;
+            String strMaximum = (String) maximum;
+            if(strValue.length() > strMaximum.length()) {
+                return false;
+            }
+        }
         Comparable minimum = DatabaseTypesHandler.getObject(currentRecord.getMinValue(), currentRecord.getColumnType());
         return minimum.compareTo(value) <= 0 && maximum.compareTo(value) >= 0;
-    }
-    public static void checkIfAllColumnsExist(int tableInfoIndex, String tableName, List<String> columnNames) throws DBAppException{
-        List<CSVRecord> records = MetadataReader.getCSVRecords();
-        Set<String> existingTableColumnNames = new HashSet<>();
-        while(tableInfoIndex < records.size()) {
-            MetadataRecord currentCSVRecord = new MetadataRecord(records.get(tableInfoIndex++));
-            String currentTableName = currentCSVRecord.getTableName();
-            if(! tableName.equals(currentTableName)) {
-                break;
-            }
-            existingTableColumnNames.add(currentCSVRecord.getColumnName());
-        }
-        for(String columnName: columnNames) {
-            if(! existingTableColumnNames.contains(columnName)) {
-                throw new DBAppException(String.format("Column '%s' does not exist in Table '%s' ", columnName, tableName));
-            }
-        }
     }
     private static void checkValueValidity(int tableInfoIndex, String tableName, String columnName, Object value) throws DBAppException{
         List<CSVRecord> records = MetadataReader.getCSVRecords();
@@ -75,6 +62,9 @@ public class Validator {
             checkValueValidity(tableInfoIndex, tableName, columnName, record.get(columnName));
         }
     }
+
+
+    // Insertion Validation
     private static void checkIfAllInsertionParametersExist(int tableInfoIndex, String tableName, Record record) throws DBAppException {
         List<CSVRecord> records = MetadataReader.getCSVRecords();
         List<String> missedColumnNames = new ArrayList<>();
@@ -91,17 +81,16 @@ public class Validator {
             throw new DBAppException(String.format("Table '%s' fields are not all referenced. Missing: %s", tableName, missedColumnNames));
         }
     }
-    public static void checkInsertionInputsValidity(String tableName, Record record) throws DBAppException{
-        int tableInfoIndex = MetadataReader.search(tableName);
+    public static void checkInsertionInputsValidity(InsertIntoTableParams p) throws DBAppException{
+        int tableInfoIndex = MetadataReader.search(p.getTableName());
         if(tableInfoIndex == -1) {
-            throw new DBAppException(String.format("Table '%s' does not exist", tableName));
+            throw new DBAppException(String.format("Table '%s' does not exist", p.getTableName()));
         }
-        checkValuesValidity(tableInfoIndex, tableName, record);
-        checkIfAllInsertionParametersExist(tableInfoIndex, tableName, record);
+        checkValuesValidity(tableInfoIndex, p.getTableName(), p.getRecord());
+        checkIfAllInsertionParametersExist(tableInfoIndex, p.getTableName(), p.getRecord());
     }
 
     // Update Validation
-
     private static void checkIfCorrectClusteringKeyValueType(String tableName, int tableInfoIndex, String clusteringKeyValue) throws DBAppException{
         List<CSVRecord> records = MetadataReader.getCSVRecords();
         while(tableInfoIndex < records.size()) {
@@ -118,24 +107,29 @@ public class Validator {
         }
     }
 
-    public static int checkUpdateValidity(String tableName, String clusteringKey, Record record) throws DBAppException{
-        int tableInfoIndex = MetadataReader.search(tableName);
+    public static int checkUpdateValidity(UpdateTableParams p) throws DBAppException{
+        int tableInfoIndex = MetadataReader.search(p.getTableName());
         if(tableInfoIndex == -1) {
-            throw new DBAppException(String.format("Table '%s' does not exist", tableName));
+            throw new DBAppException(String.format("Table '%s' does not exist", p.getTableName()));
         }
-        checkValuesValidity(tableInfoIndex, tableName, record);
-        checkIfCorrectClusteringKeyValueType(tableName, tableInfoIndex, clusteringKey);
+        if(p.getColNameValue().isEmpty()) {
+            throw new DBAppException(String.format("Update list 'colNameValue' cannot be empty"));
+        }
+        checkValuesValidity(tableInfoIndex, p.getTableName(), p.getColNameValue());
+        if(p.getClusteringKeyValue() != null) {
+            checkIfCorrectClusteringKeyValueType(p.getTableName(), tableInfoIndex, p.getClusteringKeyValue());
+        }
         return tableInfoIndex;
     }
 
 
     // Delete Validation
-    public static int checkDeleteValidity(String tableName, Hashtable<String, Object> colNameValue) throws DBAppException{
-        int tableInfoIndex = MetadataReader.search(tableName);
+    public static int checkDeleteValidity(DeleteFromTableParams p) throws DBAppException{
+        int tableInfoIndex = MetadataReader.search(p.getTableName());
         if(tableInfoIndex == -1) {
-            throw new DBAppException(String.format("Table '%s' does not exist", tableName));
+            throw new DBAppException(String.format("Table '%s' does not exist", p.getTableName()));
         }
-        checkValuesValidity(tableInfoIndex, tableName, colNameValue);
+        checkValuesValidity(tableInfoIndex, p.getTableName(), p.getColNameValue());
         return tableInfoIndex;
     }
 
@@ -165,15 +159,15 @@ public class Validator {
         }
         return false;
     }
-    private static void checkIfTypeValid(String columnName, String type) throws DBAppException {
+    private static void checkIfValidType(String columnName, String type) throws DBAppException {
         if(! (type.equals(getIntegerType()) || type.equals(getDoubleType()) ||
                 type.equals(getStringType()) || type.equals(getDateType()))) {
             throw new DBAppException(String.format("Type '%s' of column '%s' is invalid", type, columnName));
         }
     }
-    private static void checkIfTypesValid(Hashtable<String, String> colNameType) throws DBAppException {
+    private static void checkIfValidTypes(Hashtable<String, String> colNameType) throws DBAppException {
         for(String columnName: colNameType.keySet()) {
-            checkIfTypeValid(columnName, colNameType.get(columnName));
+            checkIfValidType(columnName, colNameType.get(columnName));
         }
     }
     private static boolean areInputsValid(Hashtable<String, String> colNameType, Hashtable<String, String> colNameMin, Hashtable<String, String> colNameMax) {
@@ -195,10 +189,28 @@ public class Validator {
         if(! isClusteringKeyExistingInColumns(params.getClusteringKey(), params.getColNameMax())) {
             throw new DBAppException(String.format("The clustering key '%s' does not exist in the Maximum values Table", params.getClusteringKey()));
         }
-        checkIfTypesValid(params.getColNameType());
+        checkIfValidTypes(params.getColNameType());
         if(! areInputsValid(params.getColNameType(), params.getColNameMin(), params.getColNameMax())) {
             throw new DBAppException("Input Columns are not compatible");
         }
     }
 
+    // Parser Validation
+    public static void checkIfAllColumnsExist(int tableInfoIndex, String tableName, List<String> columnNames) throws DBAppException{
+        List<CSVRecord> records = MetadataReader.getCSVRecords();
+        Set<String> existingTableColumnNames = new HashSet<>();
+        while(tableInfoIndex < records.size()) {
+            MetadataRecord currentCSVRecord = new MetadataRecord(records.get(tableInfoIndex++));
+            String currentTableName = currentCSVRecord.getTableName();
+            if(! tableName.equals(currentTableName)) {
+                break;
+            }
+            existingTableColumnNames.add(currentCSVRecord.getColumnName());
+        }
+        for(String columnName: columnNames) {
+            if(! existingTableColumnNames.contains(columnName)) {
+                throw new DBAppException(String.format("Column '%s' does not exist in Table '%s' ", columnName, tableName));
+            }
+        }
+    }
 }

@@ -91,6 +91,13 @@ class DBParser {
         }
         return new CreateTableParams(tableName, clusteringKey, colNameType, colNameMin, colNameMax);
     }
+    private int getRequiredMetadataTableInfoIndex(String tableName) throws DBAppException{
+        int res =  MetadataReader.search(tableName);
+        if(res == -1) {
+            throw new DBAppException(String.format("Table '%s' does not exist", tableName));
+        }
+        return res;
+    }
 
     private Hashtable<String, Object> getColNameValue(int requiredMetadataTableInfoIndex, String tableName, List<String> columnNames, List<String> values) throws DBAppException {
         Validator.checkIfAllColumnsExist(requiredMetadataTableInfoIndex, tableName, columnNames);
@@ -104,7 +111,7 @@ class DBParser {
     InsertIntoTableParams getInsertionParams() throws DBAppException {
         SQLParser.InsertStatementContext insertStatementContext = queryContext.insertStatement();
         String tableName = insertStatementContext.tableName().getText();
-        int requiredMetadataTableInfoIndex = MetadataReader.search(tableName);
+        int requiredMetadataTableInfoIndex = getRequiredMetadataTableInfoIndex(tableName);
         List<String> columnNames = new ArrayList<>();
         for(SQLParser.ColumnNameContext columnNameContext: insertStatementContext.columnList().columnName()) {
             columnNames.add(columnNameContext.getText());
@@ -120,7 +127,10 @@ class DBParser {
         SQLParser.UpdateStatementContext updateCtx = queryContext.updateStatement();
         String tableName = updateCtx.tableName().getText();
         List<String> columnNames = new ArrayList<>();
-        int requiredMetadataTableInfoIndex = MetadataReader.search(tableName);
+        int requiredMetadataTableInfoIndex = getRequiredMetadataTableInfoIndex(tableName);
+        if(requiredMetadataTableInfoIndex == -1) {
+            throw new DBAppException(String.format("Table '%s' does not exist", tableName));
+        }
         for(SQLParser.ColumnNameContext columnNameContext: updateCtx.updateList().columnName()) {
             columnNames.add(columnNameContext.getText());
         }
@@ -128,7 +138,7 @@ class DBParser {
         for(SQLParser.ValueContext valueCtx: updateCtx.updateList().value()) {
             updatingValues.add(valueCtx.getText());
         }
-        String primaryKeyValue = updateCtx.value().getText();
+        String primaryKeyValue = updateCtx.value() == null ? null: updateCtx.value().getText();
         Hashtable<String, Object> colNameValue = getColNameValue(requiredMetadataTableInfoIndex, tableName, columnNames, updatingValues);
         return new UpdateTableParams(tableName, primaryKeyValue, new Record(colNameValue));
     }
@@ -146,7 +156,7 @@ class DBParser {
                 logicalOperators.add(conditionListContext.logicalOperator(0).getText());
             conditionListContext = conditionListContext.deleteConditionList(0);
         }
-        int requiredMetadataTableInfoIndex = MetadataReader.search(tableName);
+        int requiredMetadataTableInfoIndex = getRequiredMetadataTableInfoIndex(tableName);
         Hashtable<String, Object> colNameValue = getColNameValue(requiredMetadataTableInfoIndex, tableName, conditionColumns, conditionValues);
         return new DeleteFromTableParams(tableName, colNameValue);
     }

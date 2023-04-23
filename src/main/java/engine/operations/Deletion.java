@@ -25,15 +25,6 @@ public class Deletion{
         this.tableName = params.getTableName();
         this.colNameValue = params.getColNameValue();
     }
-
-    private boolean areInputValuesMatchingCurrentRecord(Record currentRecord) {
-        for(String columnName: colNameValue.keySet()) {
-            if(! currentRecord.get(columnName).equals(colNameValue.get(columnName))) {
-                return false;
-            }
-        }
-        return true;
-    }
     private int deleteRecordContainingClusteringKey(Table table) {
         // Binary Search over the Pages
         String clusteringKey = table.getClusteringKey();
@@ -49,9 +40,9 @@ public class Deletion{
             return 0;
         }
         Record record = page.get(requiredRecordIndex);
-        // Check if the all other values colNameValue exist in the record found
+        // Check if the all other values in colNameValue exist in the record found
         // otherwise return 0
-        if(! areInputValuesMatchingCurrentRecord(record)) {
+        if(! record.hasMatchingValues(colNameValue)) {
             return 0;
         }
         page.removeRecord(requiredRecordIndex, clusteringKey);
@@ -71,7 +62,7 @@ public class Deletion{
             currentPage.setPageInfo(currentPageInfo);
             for(int j = 0; j < currentPage.size();) {
                 Record currentRecord = currentPage.get(j);
-                boolean toDeleteRecord = areInputValuesMatchingCurrentRecord(currentRecord);
+                boolean toDeleteRecord = currentRecord.hasMatchingValues(colNameValue);
                 if(toDeleteRecord) {
                     currentPage.removeRecord(j, table.getClusteringKey());
                     recordsDeleted++;
@@ -92,7 +83,7 @@ public class Deletion{
         return recordsDeleted;
     }
     public synchronized int deleteFromTable() throws DBAppException {
-        Validator.checkDeleteValidity(tableName, colNameValue);
+        Validator.checkDeleteValidity(params);
         HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
         Table table = serializedTablesInfo.get(tableName);
         String clusteringKey = table.getClusteringKey();

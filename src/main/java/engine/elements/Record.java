@@ -2,9 +2,7 @@ package engine.elements;
 
 
 import java.io.Serial;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Record extends Hashtable<String, Object> {
 
@@ -16,22 +14,12 @@ public class Record extends Hashtable<String, Object> {
 
     public Record() {
     }
-
-    public void putValue(String columnName, Object value) {
-        super.put(columnName, value);
-    }
-    public Set<String> getColumnNames() {
-        return keySet();
-    }
-    @Override
-    public boolean remove(Object key, Object value) {
-        return super.remove(key, value);
-    }
-    public Object get(String columnName) {
-        return super.get(columnName);
-    }
-
-    public boolean containsColumn(String columnName) {
-        return super.containsKey(columnName);
+    public boolean hasMatchingValues(Hashtable<String, Object> colNameValue) {
+        for(String columnName: colNameValue.keySet()) {
+            if(! get(columnName).equals(colNameValue.get(columnName))) {
+                return false;
+            }
+        }
+        return true;
     }
 }

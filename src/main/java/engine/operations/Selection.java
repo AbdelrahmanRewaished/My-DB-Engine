@@ -9,6 +9,7 @@ import java.util.Iterator;
 public class Selection {
     SQLTerm[] sqlTerms;
     String[] operators;
+    private Iterator<Record> selectIterator;
     private final SelectFromTableParams params;
 
     public Selection(SelectFromTableParams params) {
@@ -17,6 +18,17 @@ public class Selection {
         this.operators = params.getLogicalOperators();
     }
     public Iterator<Record> select() {
-        return null;
+        selectIterator = new Iterator<Record>() {
+            @Override
+            public boolean hasNext() {
+                return false;
+            }
+
+            @Override
+            public Record next() {
+                return null;
+            }
+        };
+        return selectIterator;
     }
 }

@@ -123,7 +123,7 @@ public class Insertion {
         Serializer.serialize(currentPage.getPageInfo().getLocation(), currentPage);
     }
     public synchronized void insertIntoTable() throws DBAppException {
-        Validator.checkInsertionInputsValidity(tableName, record);
+        Validator.checkInsertionInputsValidity(params);
         HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
         Table table = serializedTablesInfo.get(tableName);
         Object clusteringValue = record.get(table.getClusteringKey());

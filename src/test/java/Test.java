@@ -181,19 +181,6 @@ public class Test {
     }
     public static void main(String[] args) throws DBAppException {
         Test test = new Test();
-        String statement = "CREATE TABLE Employee(id INT PRIMARY KEY, name VARCHAR(20))";
-        // Create a CharStream from the SQL statement
-        CharStream input = CharStreams.fromString(statement);
-        // Create a lexer from the input
-        SQLLexer lexer = new SQLLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-        // Create a parser from the tokens
-        SQLParser parser = new SQLParser(tokens);
-        SQLParser.CreateTableStatementContext createTableStatementContext = parser.createTableStatement();
-        System.out.println(createTableStatementContext.columnDefinition(1).dataType().integer().getText());
-//        SQLParser.QueryContext queryCtx = parser.query();
-
-//        queryCtx.selectStatement();
+        String statement = "INSERT INTO Manager (id, salary) VALUES (1, 12000)";
     }
 }
