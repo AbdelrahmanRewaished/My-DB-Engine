@@ -34,7 +34,7 @@ public class LinearSelectionIterator implements Iterator<Record> {
     private int getPrecedence(String operator) {
         return switch (operator) {
             case "AND" -> 1;
-            case "XOR", "OR" -> 0;
+            case "XOR" -> 0;
             default -> -1;
         };
     }
