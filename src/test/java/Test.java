@@ -1,15 +1,17 @@
 import compiler.SQLLexer;
 import compiler.SQLParser;
 import engine.DBApp;
-import engine.DBAppException;
+import engine.elements.Page;
+import engine.elements.PageMetaInfo;
+import engine.elements.Table;
+import engine.exceptions.DBAppException;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import utilities.serialization.Deserializer;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Hashtable;
-import java.util.List;
+import java.io.PrintWriter;
+import java.util.*;
 
 import static utilities.datatypes.DatabaseTypesHandler.*;
 
@@ -179,8 +181,18 @@ public class Test {
                 parser.query();
         }
     }
+    public void showAllTableRecords(String tableName) {
+        PrintWriter pw = new PrintWriter(System.out);
+        HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
+        Table table = serializedTablesInfo.get(tableName);
+        for(PageMetaInfo pageMetaInfo: table.getPagesInfo()) {
+            pw.println(Page.deserializePage(pageMetaInfo));
+        }
+        pw.flush();
+    }
     public static void main(String[] args) throws DBAppException {
         Test test = new Test();
-        String statement = "INSERT INTO Manager (id, salary) VALUES (1, 12000)";
+        test.showAllTableRecords("Employee");
+
     }
 }

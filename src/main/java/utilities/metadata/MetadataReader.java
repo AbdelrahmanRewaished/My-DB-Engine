@@ -34,6 +34,7 @@ public class MetadataReader{
     public static synchronized List<CSVRecord> getCSVRecords() {
         return getInstance().records;
     }
+
     public static int search(String tableName) {
         List<CSVRecord> records = getCSVRecords();
         for(int i = 0; i < records.size(); i++) {
@@ -45,43 +46,48 @@ public class MetadataReader{
         }
         return -1;
     }
-    public static List<String> getTableColumns(int tableInfoIndex, String tableName) {
+    public static List<MetadataRecord> getTableMetadataRecords(String tableName) {
+        List<MetadataRecord> recordList = new ArrayList<>();
         List<CSVRecord> csvRecords = getCSVRecords();
-        List<String> columnNames = new ArrayList<>();
-        for(int i = tableInfoIndex; i < csvRecords.size(); i++) {
+        for(int i = search(tableName); i < csvRecords.size(); i++) {
             MetadataRecord currentRecord = new MetadataRecord(csvRecords.get(i));
             if(! currentRecord.getTableName().equals(tableName)) {
-                break;
+                return recordList;
             }
-            columnNames.add(currentRecord.getColumnName());
+            recordList.add(currentRecord);
         }
-        return columnNames;
+        return recordList;
     }
-    public static Hashtable<String, String> getTableColNameType(int tableInfoIndex, String tableName) {
-        List<CSVRecord> csvRecords = getCSVRecords();
-        Hashtable<String, String> colNameType = new Hashtable<>();
-        for(int i = tableInfoIndex; i < csvRecords.size(); i++) {
-            MetadataRecord currentRecord = new MetadataRecord(csvRecords.get(i));
-            if(! currentRecord.getTableName().equals(tableName)) {
-                break;
+    public static MetadataRecord getTableColumnMetadataRecord(String tableName, String columnName) {
+        for(MetadataRecord record: getTableMetadataRecords(tableName)) {
+            if(record.getColumnName().equals(columnName)) {
+                return record;
             }
-            colNameType.put(currentRecord.getColumnName(), currentRecord.getColumnType());
+        }
+        return null;
+    }
+    public static Set<String> getTableColumnNames(String tableName) {
+        List<MetadataRecord> records = MetadataReader.getTableMetadataRecords(tableName);
+        Set<String> existingTableColumnNames = new HashSet<>();
+        for(MetadataRecord record: records) {
+            existingTableColumnNames.add(record.getColumnName());
+        }
+        return existingTableColumnNames;
+    }
+    public static String getClusteringKey(String tableName) {
+        for(MetadataRecord record: getTableMetadataRecords(tableName)) {
+            if(record.isClusteringKey()) {
+               return record.getColumnName();
+            }
+        }
+        return null;
+    }
+    public static Hashtable<String, String> getTableColNameType(String tableName) {
+        List<MetadataRecord> metadataRecords = getTableMetadataRecords(tableName);
+        Hashtable<String, String> colNameType = new Hashtable<>();
+        for(MetadataRecord record: metadataRecords) {
+            colNameType.put(record.getColumnName(), record.getColumnType());
         }
         return colNameType;
-    }
-    public static String getCorrespondingColumnType(String tableName, String columnName, int tableInfoIndex) {
-        List<CSVRecord> csvRecords = MetadataReader.getCSVRecords();
-        String requiredType = null;
-        for(int i = tableInfoIndex; i < csvRecords.size(); i++) {
-            MetadataRecord currentRecord = new MetadataRecord(csvRecords.get(i));
-            if(! currentRecord.getTableName().equals(tableName)) {
-                break;
-            }
-            if(currentRecord.getColumnName().equals(columnName)) {
-                requiredType = currentRecord.getColumnType();
-                break;
-            }
-        }
-        return requiredType;
     }
 }

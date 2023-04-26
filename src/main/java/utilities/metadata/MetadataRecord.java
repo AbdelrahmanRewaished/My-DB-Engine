@@ -2,6 +2,8 @@ package utilities.metadata;
 
 import org.apache.commons.csv.CSVRecord;
 
+import java.util.List;
+
 public class MetadataRecord {
     private String tableName;
     private String maxValue, minValue;
@@ -57,5 +59,14 @@ public class MetadataRecord {
     }
     public boolean isClusteringKey() {
         return isClusteringKey;
+    }
+
+    public static MetadataRecord getRecord(List<MetadataRecord> metadataRecordList, String columnName) {
+        for(MetadataRecord record: metadataRecordList) {
+            if(record.getColumnName().equals(columnName)) {
+                return record;
+            }
+        }
+        return null;
     }
 }

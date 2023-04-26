@@ -3,11 +3,12 @@ package engine.elements;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 import java.util.Vector;
 
 public class Table implements Serializable {
     private final String folderLocation;
-    private final List<PageInfo> pagesInfo;
+    private final List<PageMetaInfo> pagesInfo;
     private final String name;
     private final String clusteringKey;
     @Serial
@@ -23,15 +24,15 @@ public class Table implements Serializable {
         return folderLocation;
     }
 
-    public List<PageInfo> getPagesInfo() {
+    public List<PageMetaInfo> getPagesInfo() {
         return pagesInfo;
     }
 
     public String getName() {
         return name;
     }
-    public void addPageInfo(PageInfo pageInfo) {
-        pagesInfo.add(pageInfo);
+    public void addPageInfo(PageMetaInfo pageMetaInfo) {
+        pagesInfo.add(pageMetaInfo);
     }
     public void removePageInfo(int index) {
         pagesInfo.remove(index);
@@ -41,6 +42,18 @@ public class Table implements Serializable {
         return clusteringKey;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Table)) return false;
+        Table table = (Table) o;
+        return getName().equals(table.getName());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getName());
+    }
 
     @Override
     public String toString() {

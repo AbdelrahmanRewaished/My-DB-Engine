@@ -19,6 +19,7 @@ public class DatabaseTypesHandler {
     private static final String dateType = "java.util.Date";
     private static final String stringType = "java.lang.String";
 
+    public static final String[] supportedTypes = new String[]{integerType, doubleType, stringType, dateType};
     private static final String sqlINTType = "INT";
     private static final String sqlVARCHARType = "VARCHAR";
     private static final String sqlFLOATType = "FLOAT";

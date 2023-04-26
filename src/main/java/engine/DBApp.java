@@ -1,16 +1,20 @@
 package engine;
 
-import engine.elements.PageInfo;
-import engine.elements.Table;
-import engine.operations.*;
 import engine.elements.Record;
-import engine.operations.Creation;
-import engine.operations.Deletion;
-import engine.operations.Insertion;
-import engine.operations.Selection;
-import engine.operations.Update;
-import engine.operations.paramters.*;
-import utilities.serialization.Deserializer;
+import engine.exceptions.DBAppException;
+import engine.operations.Initialization;
+import engine.operations.creation.CreateTableParams;
+import engine.operations.creation.Creation;
+import engine.operations.deletion.DeleteFromTableParams;
+import engine.operations.deletion.Deletion;
+import engine.operations.dropping.Dropping;
+import engine.operations.insertion.InsertIntoTableParams;
+import engine.operations.insertion.Insertion;
+import engine.operations.selection.SQLTerm;
+import engine.operations.selection.SelectFromTableParams;
+import engine.operations.selection.Selection;
+import engine.operations.update.Update;
+import engine.operations.update.UpdateTableParams;
 
 import java.util.*;
 
@@ -19,6 +23,9 @@ public class DBApp {
     private static final String rootDatabaseFolder = System.getenv("ROOT_DATABASE_FOLDER") + "/DBEngine";
     private static final String tablesRootFolder = rootDatabaseFolder + "/tables/";
     private static final String serializedTablesInfoLocation = tablesRootFolder + "serializedTablesInfo.txt";
+
+    private static final Set<String> supportedSqlLogicalOperators = new HashSet<>(Arrays.asList("AND", "OR", "XOR"));
+
     public static String getRootDatabaseFolder() {
         return rootDatabaseFolder;
     }
@@ -28,6 +35,8 @@ public class DBApp {
     public static String getSerializedTablesInfoLocation() {
         return serializedTablesInfoLocation;
     }
+
+    public static Set<String> getSupportedSqlLogicalOperators() {return supportedSqlLogicalOperators;}
     // execute at application startup
 
     private void printMessage(String message) {

@@ -1,7 +1,7 @@
 package utilities;
 
 import engine.elements.Page;
-import engine.elements.PageInfo;
+import engine.elements.PageMetaInfo;
 import engine.elements.Table;
 
 import java.util.Hashtable;
@@ -29,12 +29,12 @@ public class KeySearching {
         }
         return -1;
     }
-    public static int findPageToLookIn(Table table, Object element) {
-        List<PageInfo> pages = table.getPagesInfo();
+    public static int findPageIndexToLookIn(Table table, Object element) {
+        List<PageMetaInfo> pages = table.getPagesInfo();
         int left = 0, right = pages.size() - 1;
         while(left <= right) {
             int mid = (left + right) / 2;
-            PageInfo currentPage = pages.get(mid);
+            PageMetaInfo currentPage = pages.get(mid);
             Comparable min = currentPage.getMinimumContainedKey();
             Comparable max = currentPage.getMaximumContainedKey();
             if(min.compareTo(element) > 0) {

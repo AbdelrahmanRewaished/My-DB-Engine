@@ -1,7 +1,6 @@
 package utilities.metadata;
 
-import com.opencsv.CSVWriter;
-import engine.operations.paramters.CreateTableParams;
+import engine.operations.creation.CreateTableParams;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
@@ -11,29 +10,31 @@ import java.io.IOException;
 import java.util.List;
 
 public class MetaDataWriter {
-    private static MetaDataWriter instance;
-    private CSVPrinter appender;
-    private CSVPrinter printer;
+    private static CSVPrinter appender;
+    private static CSVPrinter printer;
 
-    private MetaDataWriter() {
-        try {
-            appender = new CSVPrinter(new FileWriter( Metadata.getCSVFileLocation(), true), CSVFormat.DEFAULT);
-            printer = new CSVPrinter(new FileWriter(Metadata.getCSVFileLocation()), CSVFormat.DEFAULT);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    private static MetaDataWriter getInstance() {
-        if(instance == null) {
-            instance = new MetaDataWriter();
-        }
-        return instance;
-    }
+    private MetaDataWriter() {}
     private static CSVPrinter getAppender() {
-        return getInstance().appender;
+        if(appender == null) {
+            try {
+                appender = new CSVPrinter(new FileWriter(Metadata.getCSVFileLocation(), true), CSVFormat.DEFAULT);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return appender;
     }
     private static CSVPrinter getPrinter() {
-        return getInstance().printer;
+       if(printer == null) {
+           List<CSVRecord> csvRecords = MetadataReader.getCSVRecords();
+           try {
+               printer = new CSVPrinter(new FileWriter(Metadata.getCSVFileLocation()), CSVFormat.DEFAULT);
+               printer.printRecords(csvRecords);
+           } catch (IOException e) {
+               throw new RuntimeException(e);
+           }
+       }
+       return printer;
     }
     public static synchronized void addTableInfo(CreateTableParams params) {
         for(String columnName: params.getColNameType().keySet()) {
