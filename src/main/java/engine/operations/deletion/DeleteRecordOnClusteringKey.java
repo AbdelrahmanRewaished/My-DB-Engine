@@ -10,8 +10,8 @@ import utilities.serialization.Serializer;
 
 public class DeleteRecordOnClusteringKey implements DeletionStrategy {
 
-    private DeleteFromTableParams dp;
-    private Table table;
+    private final DeleteFromTableParams dp;
+    private final Table table;
 
     public DeleteRecordOnClusteringKey(DeleteFromTableParams dp, Table table) {
         this.dp = dp;
@@ -44,6 +44,7 @@ public class DeleteRecordOnClusteringKey implements DeletionStrategy {
             Serializer.serialize(page.getPageInfo().getLocation(), page);
         }
         else {
+            table.removePageInfo(requiredPageIndexToDeleteFrom);
             FileHandler.deleteFile(pageMetaInfo.getLocation());
         }
         return 1;

@@ -20,7 +20,7 @@ public class Update {
         Table table = serializedTablesInfo.get(params.getTableName());
         UpdateStrategy strategy;
         if(params.getClusteringKeyValue() == null) {
-            strategy = new UpdateAllMatchingRecords(params, table);
+            strategy = new UpdateAllRecords(params, table);
         }
         else {
            strategy = new UpdateRecordOnClusteringKey(params, table);

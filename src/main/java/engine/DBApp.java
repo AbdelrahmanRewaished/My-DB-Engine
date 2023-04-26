@@ -158,7 +158,7 @@ public class DBApp {
         }
     }
     public void dropTable(String strTableName) throws DBAppException {
-        new Dropping(strTableName).drop();
+        new Dropping(strTableName).dropTable();
         printMessage("Table deleted successfully");
     }
 }

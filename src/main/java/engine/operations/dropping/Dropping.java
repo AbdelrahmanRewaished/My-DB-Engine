@@ -16,7 +16,7 @@ public class Dropping {
     public Dropping(String strTableName) {
         tableName = strTableName;
     }
-    public void drop() throws DBAppException {
+    public void dropTable() throws DBAppException {
         int tableInfoIndex = MetadataReader.search(tableName);
         if(tableInfoIndex == -1) {
             throw new DBAppException(String.format("Could not drop table %s because it does not exist !", tableName));

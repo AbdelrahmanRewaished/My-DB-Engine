@@ -6,6 +6,7 @@ import engine.elements.PageMetaInfo;
 import engine.elements.Record;
 import engine.elements.Table;
 import engine.exceptions.DBAppException;
+import engine.exceptions.insertion_exceptions.PrimaryKeyAlreadyExistsException;
 import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
 import utilities.validation.InsertionValidator;
@@ -84,22 +85,23 @@ public class Insertion {
         int lastPageNumber = Integer.parseInt(splitter[splitter.length - 1].split(".txt")[0]);
         return "/" + (lastPageNumber + 1) + ".txt";
     }
-    private Page addNewPage(Table table) {
+    private Page getNewPage(Table table) {
         PageMetaInfo pageMetaInfo = new PageMetaInfo(table.getFolderLocation() + getNextPageFileLocation(table.getPagesInfo()));
-        table.addPageInfo(pageMetaInfo);
         return new Page(pageMetaInfo);
     }
 
     private Page getPageToInsertIn(Table table, int requiredPageInfoIndex) {
         if(requiredPageInfoIndex == table.getPagesInfo().size()) {
-            return addNewPage(table);
+            Page newPage = getNewPage(table);
+            table.addPageInfo(newPage.getPageInfo());
+            return newPage;
         }
         PageMetaInfo requiredPageMetaInfo = table.getPagesInfo().get(requiredPageInfoIndex);
         return Page.deserializePage(requiredPageMetaInfo);
     }
     private void checkIfPrimaryKeyAlreadyExists(Table table, Object clusteringValue, int index) throws DBAppException {
         if(index == -1) {
-            throw new DBAppException(String.format("Primary Key of value '%s' already exists in Table '%s'", clusteringValue.toString(), table.getName()));
+            throw new PrimaryKeyAlreadyExistsException(clusteringValue.toString(), table.getName());
         }
     }
     private void adjustTablePages(Table table, int nextPageIndex, Page currentPage) {
@@ -116,7 +118,8 @@ public class Insertion {
         if(isOutOfBound) {
             Record nextRecord = currentPage.removeRecord(currentPage.size() - 1, table.getClusteringKey());
             Serializer.serialize(currentPage.getPageInfo().getLocation(), currentPage);
-            currentPage = addNewPage(table);
+            currentPage = getNewPage(table);
+            table.addPageInfo(currentPage.getPageInfo());
             currentPage.addRecord(0, table.getClusteringKey(), nextRecord);
         }
         Serializer.serialize(currentPage.getPageInfo().getLocation(), currentPage);

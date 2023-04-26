@@ -5,12 +5,12 @@ import engine.elements.PageMetaInfo;
 import engine.elements.Table;
 import utilities.serialization.Serializer;
 
-public class UpdateAllMatchingRecords implements UpdateStrategy{
+public class UpdateAllRecords implements UpdateStrategy{
 
     private UpdateTableParams up;
     private Table table;
 
-    public UpdateAllMatchingRecords(UpdateTableParams up, Table table) {
+    public UpdateAllRecords(UpdateTableParams up, Table table) {
         this.up = up;
         this.table = table;
     }
