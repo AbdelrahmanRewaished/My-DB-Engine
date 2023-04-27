@@ -55,6 +55,26 @@ public class Table implements Serializable {
         return Objects.hash(getName());
     }
 
+    public int findPageIndexToLookIn(Object element) {
+        int left = 0, right = pagesInfo.size() - 1;
+        while(left <= right) {
+            int mid = (left + right) / 2;
+            PageMetaInfo currentPage = pagesInfo.get(mid);
+            Comparable min = currentPage.getMinimumContainedKey();
+            Comparable max = currentPage.getMaximumContainedKey();
+            if(min.compareTo(element) > 0) {
+                right = mid - 1;
+            }
+            else if(max.compareTo(element) < 0) {
+                left = mid + 1;
+            }
+            else {
+                return mid;
+            }
+        }
+        return -1;
+    }
+
     @Override
     public String toString() {
         return "Table{" +

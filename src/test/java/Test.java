@@ -5,6 +5,8 @@ import engine.elements.Page;
 import engine.elements.PageMetaInfo;
 import engine.elements.Table;
 import engine.exceptions.DBAppException;
+import engine.operations.insertion.InsertIntoTableParams;
+import engine.operations.insertion.Insertion;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -190,9 +192,5 @@ public class Test {
         }
         pw.flush();
     }
-    public static void main(String[] args) throws DBAppException {
-        Test test = new Test();
-        test.showAllTableRecords("Employee");
-
-    }
 }
+

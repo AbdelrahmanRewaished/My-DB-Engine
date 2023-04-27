@@ -26,6 +26,7 @@ public class Insertion {
     }
 
     public int getRequiredRecordIndex(Page page, String clusteringKey, Object keyValue) {
+        int ELEMENT_FOUND = -1;
         int left = 0, right = page.size() - 1;
         while(left <= right) {
             int mid = (left + right) / 2;
@@ -38,45 +39,64 @@ public class Insertion {
                 left = mid + 1;
             }
             else {
-                return -1;
+                return ELEMENT_FOUND;
             }
         }
         return left;
     }
     public int getRequiredPageInfoIndex(Table table, Object keyValue) {
+        int ELEMENT_FOUND = -1;
         List<PageMetaInfo> pages = table.getPagesInfo();
         int left = 0, right = pages.size() - 1;
-        int mid = 0;
+        // To track the last position the pointers moved in
+        int currentDirection = -1;
+
         while(left <= right) {
-            mid = (left + right) / 2;
+            int mid = (left + right) / 2;
             PageMetaInfo currentPage = pages.get(mid);
             Comparable min = currentPage.getMinimumContainedKey();
             Comparable max = currentPage.getMaximumContainedKey();
             if(min.compareTo(keyValue) > 0) {
                 right = mid - 1;
-            }
-            else if(max.compareTo(keyValue) < 0 && currentPage.isFull()) {
-                left = mid + 1;
+                currentDirection = right;
             }
             else if(max.compareTo(keyValue) < 0) {
-                return mid;
+                left = mid + 1;
+                currentDirection = left;
             }
             else if(max.compareTo(keyValue) == 0 || min.compareTo(keyValue) == 0) {
-                return -1;
+                return ELEMENT_FOUND;
             }
-            else {
+            else if(min.compareTo(keyValue) < 0 && max.compareTo(keyValue) > 0) {
                 return mid;
             }
         }
-        if(left > 0) {
-            return left;
-        }
-        if(left == 0) {
-            return mid;
-        }
-        return left;
-    }
 
+        return getAdjustedSearchedPageIndex(currentDirection, pages, keyValue);
+    }
+    // To avoid inserting in a full page as possible
+    private int getAdjustedSearchedPageIndex(int currentIndex, List<PageMetaInfo> pages, Object keyValue) {
+        int FIRST_ELEMENT_INDEX = 0;
+        if(currentIndex == -1) {
+            return FIRST_ELEMENT_INDEX;
+        }
+        if(currentIndex == pages.size()) {
+            if(! pages.get(currentIndex - 1).isFull()) {
+                currentIndex--;
+            }
+        }
+        else if(pages.get(currentIndex).getMinimumContainedKey().compareTo(keyValue) > 0) {
+            if(pages.get(currentIndex).isFull() || ! pages.get(currentIndex - 1).isFull()) {
+                currentIndex--;
+            }
+        }
+        else if(pages.get(currentIndex).getMaximumContainedKey().compareTo(keyValue) < 0) {
+            if(pages.get(currentIndex).isFull() && ! pages.get(currentIndex + 1).isFull()) {
+                currentIndex++;
+            }
+        }
+        return currentIndex;
+    }
     private String getNextPageFileLocation(List<PageMetaInfo> pagesInfo) {
         if(pagesInfo.isEmpty()) {
             return "/0.txt";

@@ -5,7 +5,6 @@ import engine.elements.PageMetaInfo;
 import engine.elements.Record;
 import engine.elements.Table;
 import utilities.FileHandler;
-import utilities.KeySearching;
 import utilities.serialization.Serializer;
 
 public class DeleteRecordOnClusteringKey implements DeletionStrategy {
@@ -22,14 +21,14 @@ public class DeleteRecordOnClusteringKey implements DeletionStrategy {
     public int deleteFromTable() {
         // Binary Search over the Pages
         String clusteringKey = table.getClusteringKey();
-        int requiredPageIndexToDeleteFrom = KeySearching.findPageIndexToLookIn(table, dp.getColNameValue().get(clusteringKey));
+        int requiredPageIndexToDeleteFrom = table.findPageIndexToLookIn(dp.getColNameValue().get(clusteringKey));
         if(requiredPageIndexToDeleteFrom == -1) {
             return 0;
         }
         // Binary search over records in the Page found
         PageMetaInfo pageMetaInfo = table.getPagesInfo().get(requiredPageIndexToDeleteFrom);
         Page page = Page.deserializePage(pageMetaInfo);
-        int requiredRecordIndex = KeySearching.findRecordIndex(page, clusteringKey, (Comparable) dp.getColNameValue().get(clusteringKey));
+        int requiredRecordIndex = page.findRecordIndex(clusteringKey, (Comparable) dp.getColNameValue().get(clusteringKey));
         if(requiredRecordIndex == -1) {
             return 0;
         }

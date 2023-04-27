@@ -4,6 +4,7 @@ import utilities.serialization.Deserializer;
 
 import java.io.Serial;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.Vector;
 
 public class Page extends Vector<Record> {
@@ -48,6 +49,24 @@ public class Page extends Vector<Record> {
             Object newValue = colNameNewValue.get(columnName);
             requiredRecord.put(columnName, newValue);
         }
+    }
+    public int findRecordIndex(String clusteringKey, Comparable keyValue) {
+        int left = 0, right = size() - 1;
+        while(left <= right) {
+            int mid = (left + right) / 2;
+            Hashtable<String, Object> currentRecord = get(mid);
+            Comparable currentClusteringKey = (Comparable) currentRecord.get(clusteringKey);
+            if(currentClusteringKey.compareTo(keyValue) > 0) {
+                right = mid - 1;
+            }
+            else if(currentClusteringKey.compareTo(keyValue) < 0) {
+                left = mid + 1;
+            }
+            else {
+                return mid;
+            }
+        }
+        return -1;
     }
     public static Page deserializePage(PageMetaInfo pageMetaInfo) {
         Page page = (Page) Deserializer.deserialize(pageMetaInfo.getLocation());

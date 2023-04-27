@@ -2,11 +2,8 @@ package engine.operations.selection;
 
 import engine.elements.Page;
 import engine.elements.Table;
-import utilities.KeySearching;
-import utilities.serialization.Deserializer;
 
 import java.util.Hashtable;
-import java.util.Map;
 
 public class BinarySearchInitialization implements SelectionInitializationStrategy {
 
@@ -25,10 +22,10 @@ public class BinarySearchInitialization implements SelectionInitializationStrate
             if(result.containsKey(tableName)) {
                 continue;
             }
-            int requiredPageIndex = KeySearching.findPageIndexToLookIn(tableNameObject.get(tableName), term._objValue);
             Table table = tableNameObject.get(tableName);
+            int requiredPageIndex = table.findPageIndexToLookIn(term._objValue);
             Page page = Page.deserializePage(table.getPagesInfo().get(requiredPageIndex));
-            int requiredRecordIndex = KeySearching.findRecordIndex(page, table.getClusteringKey(), (Comparable) term._objValue);
+            int requiredRecordIndex = page.findRecordIndex(table.getClusteringKey(), (Comparable) term._objValue);
             result.put(term._strTableName, new SelectIteratorReferences.TableRecordInfo(requiredPageIndex, requiredRecordIndex));
         }
         return result;
