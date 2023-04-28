@@ -11,8 +11,9 @@ import utilities.serialization.Serializer;
 
 import java.util.HashMap;
 
+@SuppressWarnings("unchecked")
 public class Dropping {
-    private String tableName;
+    private final String tableName;
     public Dropping(String strTableName) {
         tableName = strTableName;
     }

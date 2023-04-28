@@ -31,10 +31,6 @@ public class UpdateValidator {
         if(MetadataReader.search(p.getTableName())== -1) {
             throw new TableDoesNotExistException(p.getTableName());
         }
-        if(p.getColNameValue().isEmpty()) {
-            throw new UpdateListCannotBeEmptyException();
-        }
-
         String clusteringKey = MetadataReader.getClusteringKey(p.getTableName());
         if(p.getColNameValue().contains(clusteringKey)) {
             throw new UpdateListCannotContainPrimaryKeyException();

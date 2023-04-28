@@ -7,6 +7,8 @@ import engine.elements.Record;
 import engine.elements.Table;
 import engine.exceptions.DBAppException;
 import engine.exceptions.insertion_exceptions.PrimaryKeyAlreadyExistsException;
+import utilities.datatypes.NullValueWrapper;
+import utilities.metadata.MetadataReader;
 import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
 import utilities.validation.InsertionValidator;
@@ -14,6 +16,7 @@ import utilities.validation.InsertionValidator;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
 
 import static engine.DBApp.getFileExtension;
 
@@ -146,6 +149,14 @@ public class Insertion {
         }
         Serializer.serialize(currentPage.getPageInfo().getLocation(), currentPage);
     }
+    private void adjustInsertedRecord(String tableName, Record record) {
+        Set<String> columnNames = MetadataReader.getTableColumnNames(tableName);
+        for(String columnName: columnNames) {
+            if(! record.containsKey(columnName)) {
+                record.put(columnName, new NullValueWrapper());
+            }
+        }
+    }
     public synchronized void insertIntoTable() throws DBAppException {
         InsertionValidator.validate(params);
         HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
@@ -156,6 +167,7 @@ public class Insertion {
         Page page = getPageToInsertIn(table, requiredPageInfoIndex);
         int requiredRecordIndex = getRequiredRecordIndex(page, table.getClusteringKey(), clusteringValue);
         checkIfPrimaryKeyAlreadyExists(table, clusteringValue, requiredRecordIndex);
+        adjustInsertedRecord(tableName, record);
         boolean isOverFullPage = ! page.addRecord(requiredRecordIndex, table.getClusteringKey(), record);
         if(isOverFullPage) {
             adjustTablePages(table, requiredPageInfoIndex + 1, page);

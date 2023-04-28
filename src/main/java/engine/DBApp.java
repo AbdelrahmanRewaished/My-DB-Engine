@@ -16,6 +16,7 @@ import engine.operations.selection.Selection;
 import engine.operations.update.Update;
 import engine.operations.update.UpdateTableParams;
 
+import java.io.PrintWriter;
 import java.util.*;
 
 @SuppressWarnings("SpellCheckingInspection")

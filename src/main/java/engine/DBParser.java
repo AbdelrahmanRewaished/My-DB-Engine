@@ -72,7 +72,7 @@ class DBParser {
         return null;
     }
 
-    CreateTableParams getCreationParams() {
+    CreateTableParams getCreationParams() throws DBAppException {
         SQLParser.CreateTableStatementContext createTableStatementContext = queryContext.createTableStatement();
         String tableName = createTableStatementContext.tableName().getText();
         String clusteringKey = null;

@@ -12,6 +12,11 @@ public class SelectFromTableParams {
     private final String[] logicalOperators;
 
     public SelectFromTableParams(SQLTerm[] sqlTerms, String[] logicalOperators) throws DBAppException {
+        for(SQLTerm term: sqlTerms) {
+            if(! term.isValidSqlTerm()) {
+                throw new DBAppException(String.format("Invalid SQL Term '%s'", term));
+            }
+        }
         if(sqlTerms.length - 1 != logicalOperators.length) {
             throw new DBAppException("Invalid SelectFromTable Parameters");
         }

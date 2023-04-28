@@ -99,6 +99,9 @@ public class DatabaseTypesHandler {
         return stringType;
     }
     public static Comparable getObject(String object, String objectType) {
+        if(object.toLowerCase().equals("null")) {
+            return null;
+        }
         if(objectType.equals(stringType)) {
             return object;
         }
