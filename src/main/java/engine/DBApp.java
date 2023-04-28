@@ -20,7 +20,6 @@ import java.util.*;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class DBApp {
-
     private static final Set<String> supportedSqlLogicalOperators = new HashSet<>(Arrays.asList("AND", "OR", "XOR"));
     private static final String fileExtension = ".ser";
     private static final String rootDatabaseFolder = System.getenv("ROOT_DATABASE_FOLDER") + "/DBEngine";

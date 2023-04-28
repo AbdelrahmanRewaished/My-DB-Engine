@@ -1,16 +1,14 @@
 package utilities.datatypes;
 
-import org.apache.commons.csv.CSVRecord;
-import utilities.metadata.MetadataReader;
-import utilities.metadata.MetadataRecord;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 
+@SuppressWarnings("ALL")
 public class DatabaseTypesHandler {
     private DatabaseTypesHandler(){}
 
@@ -19,11 +17,15 @@ public class DatabaseTypesHandler {
     private static final String dateType = "java.util.Date";
     private static final String stringType = "java.lang.String";
 
-    public static final String[] supportedTypes = new String[]{integerType, doubleType, stringType, dateType};
+    private static final Set<String> supportedTypes = new HashSet<>(Arrays.asList(integerType, doubleType, stringType, dateType));
     private static final String sqlINTType = "INT";
     private static final String sqlVARCHARType = "VARCHAR";
     private static final String sqlFLOATType = "FLOAT";
     private static final String sqlDATEType = "DATE";
+
+    public static Set<String> getSupportedTypes() {
+        return supportedTypes;
+    }
     public static String getIntegerType() {
         return integerType;
     }

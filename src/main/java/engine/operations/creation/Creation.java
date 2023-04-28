@@ -4,7 +4,7 @@ import engine.DBApp;
 import engine.elements.Table;
 import engine.exceptions.DBAppException;
 import utilities.FileHandler;
-import utilities.metadata.MetaDataWriter;
+import utilities.metadata.MetadataWriter;
 import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
 import utilities.validation.CreationValidator;
@@ -25,6 +25,6 @@ public class Creation{
         HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
         serializedTablesInfo.put(createTableParams.getTableName(), table);
         Serializer.serialize(DBApp.getSerializedTablesInfoLocation(), serializedTablesInfo);
-        MetaDataWriter.addTableInfo(createTableParams);
+        MetadataWriter.addTableInfo(createTableParams);
     }
 }

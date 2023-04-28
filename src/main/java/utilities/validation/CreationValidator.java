@@ -12,9 +12,6 @@ import utilities.metadata.MetadataReader;
 import java.util.Hashtable;
 import java.util.Set;
 
-import static utilities.datatypes.DatabaseTypesHandler.*;
-import static utilities.datatypes.DatabaseTypesHandler.getDateType;
-
 public class CreationValidator {
     private CreationValidator(){}
 
@@ -43,8 +40,7 @@ public class CreationValidator {
         return false;
     }
     private static void checkIfValidType(String columnName, String type) throws DBAppException {
-        if(! (type.equals(getIntegerType()) || type.equals(getDoubleType()) ||
-                type.equals(getStringType()) || type.equals(getDateType()))) {
+        if(! DatabaseTypesHandler.getSupportedTypes().contains(type)) {
             throw new InvalidFieldTypeException(type, columnName);
         }
     }

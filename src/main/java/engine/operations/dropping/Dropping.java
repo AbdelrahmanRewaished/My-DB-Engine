@@ -4,7 +4,7 @@ import engine.DBApp;
 import engine.exceptions.DBAppException;
 import engine.elements.Table;
 import utilities.FileHandler;
-import utilities.metadata.MetaDataWriter;
+import utilities.metadata.MetadataWriter;
 import utilities.metadata.MetadataReader;
 import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
@@ -25,6 +25,6 @@ public class Dropping {
         serializedTablesInfo.remove(tableName);
         Serializer.serialize(DBApp.getSerializedTablesInfoLocation(), serializedTablesInfo);
         FileHandler.deleteFolder(DBApp.getTablesRootFolder() + tableName);
-        MetaDataWriter.deleteTableInfo(tableInfoIndex, tableName);
+        MetadataWriter.deleteTableInfo(tableInfoIndex, tableName);
     }
 }

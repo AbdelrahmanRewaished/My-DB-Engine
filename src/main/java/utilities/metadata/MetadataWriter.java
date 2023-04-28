@@ -9,8 +9,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-public class MetaDataWriter {
-    private MetaDataWriter() {}
+public class MetadataWriter {
+    private MetadataWriter() {}
     private static CSVPrinter getAppender() {
         CSVPrinter appender;
         try {
@@ -46,6 +46,7 @@ public class MetaDataWriter {
         try {
             appender.flush();
             appender.close();
+            MetadataReader.setModified();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -64,6 +65,7 @@ public class MetaDataWriter {
             printer.printRecords(records);
             printer.flush();
             printer.close();
+            MetadataReader.setModified();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

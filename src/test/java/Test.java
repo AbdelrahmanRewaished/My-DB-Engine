@@ -5,8 +5,6 @@ import engine.elements.Page;
 import engine.elements.PageMetaInfo;
 import engine.elements.Table;
 import engine.exceptions.DBAppException;
-import engine.operations.insertion.InsertIntoTableParams;
-import engine.operations.insertion.Insertion;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -18,10 +16,9 @@ import java.util.*;
 import static utilities.datatypes.DatabaseTypesHandler.*;
 
 public class Test {
-    private DBApp dbApp = new DBApp();
-    private String tableName = "Employee";
-    private String[] columns = {"id", "name", "birthdate", "salary"};
-    private String clusteringKey = "id";
+    private final DBApp dbApp = new DBApp();
+    private final String tableName = "Employee";
+    private final String[] columns = {"id", "name", "birthdate", "salary"};
     private Hashtable<String, Object> colNameValue;
     private Hashtable<String, String> getColNameType(String[] names, String[] types) {
         Hashtable<String, String> res = new Hashtable<>();
@@ -53,6 +50,7 @@ public class Test {
                 getStringType(), getDateType(), getDoubleType()});
         Hashtable<String, String> colNameMin = getColNameBound(columns, new String[]{"0", "A", "1700-01-01", "1000.0"});
         Hashtable<String, String> colNameMax = getColNameBound(columns, new String[]{Integer.MAX_VALUE + "", "zzzzzzzzz", "2500-12-31", "999999.0"});
+        String clusteringKey = "id";
         dbApp.createTable(tableName, clusteringKey, colNameType, colNameMin, colNameMax);
     }
     private void insertMultipleValueIntoTablesTest() throws DBAppException {

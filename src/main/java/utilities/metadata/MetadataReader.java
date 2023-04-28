@@ -11,16 +11,24 @@ import java.util.*;
 
 public class MetadataReader {
     private MetadataReader() {}
+    private static List<CSVRecord> records;
+    private static boolean isModified;
+
+    public static void setModified() {
+        isModified = true;
+    }
 
     public static synchronized List<CSVRecord> getCSVRecords() {
-        List<CSVRecord> records;
-        try {
-            Reader formatReader = Files.newBufferedReader(Paths.get(Metadata.getCSVFileLocation()));
-            records = CSVFormat.DEFAULT.parse(formatReader).getRecords();
-            formatReader.close();
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
+        if(records == null || isModified) {
+            try {
+                Reader formatReader = Files.newBufferedReader(Paths.get(Metadata.getCSVFileLocation()));
+                records = CSVFormat.DEFAULT.parse(formatReader).getRecords();
+                formatReader.close();
+                isModified = false;
+            }
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         return records;
     }
