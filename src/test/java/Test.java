@@ -183,7 +183,7 @@ public class Test {
                 parser.query();
         }
     }
-    public void showAllTableRecords(String tableName) {
+    public static void showAllTableRecords(String tableName) {
         PrintWriter pw = new PrintWriter(System.out);
         HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
         Table table = serializedTablesInfo.get(tableName);

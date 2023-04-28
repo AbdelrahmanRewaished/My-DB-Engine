@@ -18,13 +18,14 @@ import engine.operations.update.UpdateTableParams;
 
 import java.util.*;
 
+@SuppressWarnings("SpellCheckingInspection")
 public class DBApp {
 
+    private static final Set<String> supportedSqlLogicalOperators = new HashSet<>(Arrays.asList("AND", "OR", "XOR"));
+    private static final String fileExtension = ".ser";
     private static final String rootDatabaseFolder = System.getenv("ROOT_DATABASE_FOLDER") + "/DBEngine";
     private static final String tablesRootFolder = rootDatabaseFolder + "/tables/";
-    private static final String serializedTablesInfoLocation = tablesRootFolder + "serializedTablesInfo.txt";
-
-    private static final Set<String> supportedSqlLogicalOperators = new HashSet<>(Arrays.asList("AND", "OR", "XOR"));
+    private static final String serializedTablesInfoLocation = tablesRootFolder + "serializedTablesInfo" + fileExtension;
 
     public static String getRootDatabaseFolder() {
         return rootDatabaseFolder;
@@ -35,8 +36,8 @@ public class DBApp {
     public static String getSerializedTablesInfoLocation() {
         return serializedTablesInfoLocation;
     }
-
     public static Set<String> getSupportedSqlLogicalOperators() {return supportedSqlLogicalOperators;}
+    public static String getFileExtension() {return fileExtension;}
     // execute at application startup
 
     private void printMessage(String message) {
@@ -133,28 +134,34 @@ public class DBApp {
         if(parser.isHavingSyntaxError()) {
             throw new DBAppException("Invalid Statement");
         }
-        switch(parser.getCommandType()) {
-            case "SELECT":
+        switch (parser.getCommandType()) {
+            case "SELECT" -> {
                 SelectFromTableParams sp = parser.getSelectionParams();
                 return selectFromTable(sp.getSqlTerms(), sp.getLogicalOperators());
-            case "CREATE":
+            }
+            case "CREATE" -> {
                 CreateTableParams cp = parser.getCreationParams();
                 createTable(cp.getTableName(), cp.getClusteringKey(), cp.getColNameType(), cp.getColNameMin(), cp.getColNameMax());
                 return null;
-            case "INSERT":
+            }
+            case "INSERT" -> {
                 InsertIntoTableParams ip = parser.getInsertionParams();
                 insertIntoTable(ip.getTableName(), ip.getRecord());
                 return null;
-            case "UPDATE":
+            }
+            case "UPDATE" -> {
                 UpdateTableParams up = parser.getUpdateParams();
                 updateTable(up.getTableName(), up.getClusteringKeyValue(), up.getColNameValue());
                 return null;
-            case "DELETE":
+            }
+            case "DELETE" -> {
                 DeleteFromTableParams dp = parser.getDeletionParams();
                 deleteFromTable(dp.getTableName(), dp.getColNameValue());
                 return null;
-            default:
+            }
+            default -> {
                 return null;
+            }
         }
     }
     public void dropTable(String strTableName) throws DBAppException {

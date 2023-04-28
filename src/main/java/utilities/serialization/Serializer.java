@@ -8,10 +8,12 @@ import java.io.Serializable;
 public class Serializer {
     private Serializer(){}
     public static void serialize(String fileLocation, Serializable serializable) {
-        try (
+        try {
             FileOutputStream fos = new FileOutputStream(fileLocation);
-            ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+            ObjectOutputStream oos = new ObjectOutputStream(fos) ;
             oos.writeObject(serializable);
+            oos.close();
+            fos.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

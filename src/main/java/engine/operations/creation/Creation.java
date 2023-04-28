@@ -11,6 +11,7 @@ import utilities.validation.CreationValidator;
 
 import java.util.HashMap;
 
+@SuppressWarnings("unchecked")
 public class Creation{
     private final CreateTableParams createTableParams;
     public Creation(CreateTableParams createTableParams) {

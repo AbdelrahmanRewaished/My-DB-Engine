@@ -2,6 +2,7 @@ package utilities;
 
 import java.io.File;
 import java.io.IOException;
+import org.apache.commons.io.FileUtils;
 
 
 public class FileHandler {
@@ -13,7 +14,12 @@ public class FileHandler {
         return folder.getAbsolutePath();
     }
     public static void deleteFolder(String location) {
-        deleteFile(location);
+        File folder = new File(location);
+        try {
+            FileUtils.deleteDirectory(folder);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
     public static void deleteFile(String location) {
         File file = new File(location);

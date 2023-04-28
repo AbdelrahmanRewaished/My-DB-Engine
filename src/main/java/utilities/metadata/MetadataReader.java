@@ -1,38 +1,28 @@
 package utilities.metadata;
 
-import com.opencsv.CSVReader;
-import engine.DBApp;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class MetadataReader{
-    private static MetadataReader instance;
-    private List<CSVRecord> records;
-    private MetadataReader() {
+public class MetadataReader {
+    private MetadataReader() {}
+
+    public static synchronized List<CSVRecord> getCSVRecords() {
+        List<CSVRecord> records;
         try {
             Reader formatReader = Files.newBufferedReader(Paths.get(Metadata.getCSVFileLocation()));
             records = CSVFormat.DEFAULT.parse(formatReader).getRecords();
+            formatReader.close();
         }
         catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-    }
-    private static synchronized MetadataReader getInstance() {
-        if(instance == null) {
-            instance = new MetadataReader();
-        }
-        return instance;
-    }
-    public static synchronized List<CSVRecord> getCSVRecords() {
-        return getInstance().records;
+        return records;
     }
 
     public static int search(String tableName) {

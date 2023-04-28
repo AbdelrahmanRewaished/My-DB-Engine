@@ -11,6 +11,7 @@ import utilities.metadata.MetadataRecord;
 import java.util.Hashtable;
 import java.util.List;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class CommonValidator {
     private CommonValidator(){}
     private static boolean isValueInRange(MetadataRecord currentRecord, Object value) {
@@ -45,6 +46,7 @@ public class CommonValidator {
         for(String columnName: record.keySet()) {
             MetadataRecord columnMetadataRecord = MetadataRecord.getRecord(metadataRecords, columnName);
             Object value = record.get(columnName);
+            assert columnMetadataRecord != null;
             if(! isValueInRange(columnMetadataRecord, value)) {
                 String minimum = columnMetadataRecord.getMinValue(), maximum = columnMetadataRecord.getMaxValue();
                 throw new ValueOutOfRangeException(value.toString(), minimum, maximum);
