@@ -15,10 +15,9 @@ public class Initialization {
         FileHandler.createFile(Metadata.getCSVFileLocation());
     }
     public static void init() {
-        if(FileHandler.isFileExisting(DBApp.getRootDatabaseFolder())) {
+        if(FileHandler.isFileExisting(DBApp.getTablesRootFolder())) {
             return;
         }
-        FileHandler.createFolder(DBApp.getRootDatabaseFolder());
         createMetadataFile();
         FileHandler.createFolder(DBApp.getTablesRootFolder());
         Serializer.serialize(DBApp.getSerializedTablesInfoLocation(), new HashMap<>());

@@ -2,3 +2,5 @@
 target
 MyDBEngine.iml
 gen
+resources/data
+resources/metadata.csv

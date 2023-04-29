@@ -183,12 +183,50 @@ public class Test {
     }
     public static void showAllTableRecords(String tableName) {
         PrintWriter pw = new PrintWriter(System.out);
+        pw.println("Table " + tableName + " content: ");
         HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
         Table table = serializedTablesInfo.get(tableName);
         for(PageMetaInfo pageMetaInfo: table.getPagesInfo()) {
             pw.println(Page.deserializePage(pageMetaInfo));
         }
+        pw.println();
         pw.flush();
+    }
+
+    public static void main(String[] args) throws DBAppException {
+        DBApp dbApp = new DBApp();
+        dbApp.init();
+//        dbApp.parseSQL(new StringBuffer("CREATE TABLE Employee (id INT PRIMARY KEY, name VARCHAR(20), salary FLOAT, birthdate DATE)"));
+//        dbApp.parseSQL(new StringBuffer("CREATE TABLE Manager (id INT PRIMARY KEY, name VARCHAR(20), salary FLOAT, depId INT)"));
+//        Random r = new Random();
+//        Set<Integer> emp_set = new HashSet<>(), man_set = new HashSet<>();
+//        for(int i = 0; i < 20; i++) {
+//            int emp_id = r.nextInt(100);
+//            while(emp_set.contains(emp_id)) {
+//                emp_id = r.nextInt(100);
+//            }
+//            if(emp_id % 3 == 0) {
+//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Employee (id, name) VALUES (%d, %s)", emp_id, "abdo")));
+//            }
+//            else {
+//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Employee (id, name, salary, birthdate) VALUES (%d, %s, %d, %s)", emp_id, "abdo", 12000, "2002-02-10")));
+//            }
+//            emp_set.add(emp_id);
+//            int man_id = r.nextInt(100);
+//            while(man_set.contains(man_id)) {
+//                man_id = r.nextInt(100);
+//            }
+//            if(emp_id % 3 == 0) {
+//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Manager (id, name) VALUES (%d, %s)", man_id, "abdo")));
+//            }
+//            else {
+//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Manager (id, name, salary, depId) VALUES (%d, %s, %d, %d)", man_id, "abdo", 170000, man_id)));
+//            }
+//            man_set.add(man_id);
+//        }
+//
+        showAllTableRecords("Employee");
+        showAllTableRecords("Manager");
     }
 }
 

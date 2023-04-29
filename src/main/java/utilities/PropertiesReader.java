@@ -1,11 +1,13 @@
 package utilities;
 
+import engine.DBApp;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
 
 public class PropertiesReader {
-    private static final String propertiesLocation = "src/resources/DBApp.config";
+    private static final String propertiesLocation = DBApp.getRootDatabaseFolder() + "/DBApp.config";
     private final Properties properties;
     private static PropertiesReader instance;
     private PropertiesReader() {
