@@ -20,6 +20,7 @@ import java.util.Set;
 
 import static engine.DBApp.getFileExtension;
 
+@SuppressWarnings("ALL")
 public class Insertion {
     private final InsertIntoTableParams params;
     private final String tableName;
@@ -102,16 +103,17 @@ public class Insertion {
         }
         return currentIndex;
     }
-    private String getNextPageFileLocation(List<PageMetaInfo> pagesInfo) {
-        if(pagesInfo.isEmpty()) {
+
+    private String getNextPageFileLocation(Table table) {
+        if(table.getPagesInfo().isEmpty()) {
             return "/0" + getFileExtension();
         }
-        String[] splitter = pagesInfo.get(pagesInfo.size() - 1).getLocation().split("/");
+        String[] splitter = table.getMaxPageLocation().split("/");
         int lastPageNumber = Integer.parseInt(splitter[splitter.length - 1].split(getFileExtension())[0]);
         return "/" + (lastPageNumber + 1) + getFileExtension();
     }
     private Page getNewPage(Table table) {
-        PageMetaInfo pageMetaInfo = new PageMetaInfo(table.getFolderLocation() + getNextPageFileLocation(table.getPagesInfo()));
+        PageMetaInfo pageMetaInfo = new PageMetaInfo(table.getFolderLocation() + getNextPageFileLocation(table));
         return new Page(pageMetaInfo);
     }
 

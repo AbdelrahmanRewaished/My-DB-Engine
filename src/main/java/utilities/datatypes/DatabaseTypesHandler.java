@@ -231,8 +231,4 @@ public class DatabaseTypesHandler {
         }
         return null;
     }
-
-    public static void main(String[] args) {
-        System.out.println(getMaximumDateValue() + "  " + getMinimumDateValue());
-    }
 }

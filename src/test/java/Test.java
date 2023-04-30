@@ -83,49 +83,5 @@ public class Test {
         pw.println();
         pw.flush();
     }
-
-    public static void main(String[] args) throws DBAppException {
-        DBApp dbApp = new DBApp();
-        dbApp.init();
-//        dbApp.dropTable("Employee");
-//        dbApp.parseSQL(new StringBuffer("create Table Employee (id int check(id > 0 and id < 100) primary KeY, name varChAR(20), salary float check (salary > 0 and salary < 1000000), birth_time Date check(birth_time = 2500-12-31))"));
-//        dbApp.parseSQL(new StringBuffer("CREATE TABLE Manager (id INT PRIMARY KEY, name VARCHAR(20), salary FLOAT, depId INT)"));
-//        Random r = new Random();
-//        Set<Integer> emp_set = new HashSet<>(), man_set = new HashSet<>();
-//        for(int i = 0; i < 20; i++) {
-//            int emp_id = r.nextInt(100);
-//            while(emp_set.contains(emp_id)) {
-//                emp_id = r.nextInt(100);
-//            }
-//            if(emp_id % 3 == 0) {
-//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Employee (id, name) VALUES (%d, %s)", emp_id, "abdo")));
-//            }
-//            else {
-//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Employee (id, name, salary, birthdate) VALUES (%d, %s, %d, %s)", emp_id, "abdo", 12000, "2002-02-10")));
-//            }
-//            emp_set.add(emp_id);
-//            int man_id = r.nextInt(100);
-//            while(man_set.contains(man_id)) {
-//                man_id = r.nextInt(100);
-//            }
-//            if(emp_id % 3 == 0) {
-//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Manager (id, name) VALUES (%d, %s)", man_id, "abdo")));
-//            }
-//            else {
-//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Manager (id, name, salary, depId) VALUES (%d, %s, %d, %d)", man_id, "abdo", 170000, man_id)));
-//            }
-//            man_set.add(man_id);
-//        }
-//          dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, birth_time, salary) values (1, abdo, 2020-12-31, null)"));
-//        Record record = new Record();
-//        record.put("name", "abdo");
-//        record.put("salary", 3000.0);
-//        dbApp.updateTable("Manager", "-1", record);
-          dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, birth_time) values (null, null, null)"));
-//        showAllTableRecords("Employee");
-//        showAllTableRecords("Manager");
-
-
-    }
 }
 

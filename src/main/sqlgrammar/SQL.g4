@@ -38,7 +38,7 @@ columnDefinitionConditionList: conditionExpression (AND columnDefinitionConditio
 
 dataType: INT | FLOAT | VARCHAR '(' integer ')' | DATE ;
 
-word: (LETTER)+ (DIGIT)*;
+word: (LETTER)+ (DIGIT | LETTER)*;
 
 columnName: word;
 

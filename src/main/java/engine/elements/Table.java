@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Vector;
 
+import static engine.DBApp.getFileExtension;
+
 public class Table implements Serializable {
     private final String folderLocation;
     private final List<PageMetaInfo> pagesInfo;
@@ -73,6 +75,9 @@ public class Table implements Serializable {
             }
         }
         return -1;
+    }
+    public String getMaxPageLocation() {
+        return pagesInfo.get(pagesInfo.size() - 1).getLocation();
     }
 
     @Override

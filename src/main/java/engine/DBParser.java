@@ -196,9 +196,12 @@ class DBParser {
         if(MetadataReader.search(tableName) == -1) {
             throw new TableDoesNotExistException(tableName);
         }
-        String conditionColumn = updateStatementContext.equalityExpression().columnName().getText();
+        String conditionColumn = null;
+        if(updateStatementContext.equalityExpression() != null) {
+            conditionColumn = updateStatementContext.equalityExpression().columnName().getText();
+        }
         String tablePrimaryKey = MetadataReader.getClusteringKey(tableName);
-        if(! conditionColumn.equals(tablePrimaryKey)) {
+        if(conditionColumn != null && ! conditionColumn.equals(tablePrimaryKey)) {
             throw new UpdateConditionMustOnlyHavePrimaryKeyException(tableName, conditionColumn, tablePrimaryKey);
         }
         List<String> columnNames = new ArrayList<>();
