@@ -76,8 +76,8 @@ class DBParser {
 
     private Comparable getConditionExpressionBoundValue(Object value, String operator) {
         return switch(operator) {
-            case "<=" -> (Comparable) DatabaseTypesHandler.addObjectValue(value, 1);
-            case ">=" -> (Comparable) DatabaseTypesHandler.addObjectValue(value, -1);
+            case "<" -> (Comparable) DatabaseTypesHandler.addObjectValue(value, -1);
+            case ">" -> (Comparable) DatabaseTypesHandler.addObjectValue(value, 1);
             default -> (Comparable) value;
         };
     }
@@ -90,7 +90,7 @@ class DBParser {
             String columnName = columnDefinitionContext.columnName().getText();
             SQLParser.DataTypeContext dataTypeContext = columnDefinitionContext.dataType();
             String type = dataTypeContext.getText().toUpperCase();
-            Bound bound = null;
+            Bound bound;
             boolean isPrimaryKey = clusteringKey == null;
             if(isPrimaryKey) {
                 clusteringKey = columnName;
@@ -114,7 +114,7 @@ class DBParser {
                     if(! actualType.equals(DatabaseTypesHandler.getCorrespondingJavaType(type))) {
                         throw new InvalidTypeException(conditionCheckValue, type, actualType);
                     }
-                    Object conditionCheckValueObject = DatabaseTypesHandler.getObject(conditionCheckValue, type);
+                    Object conditionCheckValueObject = DatabaseTypesHandler.getObject(conditionCheckValue, DatabaseTypesHandler.getCorrespondingJavaType(type));
                     String operator = conditionExpressionContext.operator().getText();
                     Comparable boundValue = getConditionExpressionBoundValue(conditionCheckValueObject, operator);
                     if(operator.contains(">") && (min == null || min.compareTo(boundValue) > 0)) {
@@ -148,6 +148,9 @@ class DBParser {
     }
     InsertIntoTableParams getInsertionParams() throws DBAppException {
         SQLParser.InsertStatementContext insertStatementContext = queryContext.insertStatement();
+        if(insertStatementContext.columnList().columnName().size() != insertStatementContext.valueList().value().size()) {
+            throw new DBAppException("Invalid Expression");
+        }
         String tableName = insertStatementContext.tableName().getText();
         if(MetadataReader.search(tableName) == -1) {
             throw new TableDoesNotExistException(tableName);

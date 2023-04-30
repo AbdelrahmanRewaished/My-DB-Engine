@@ -62,11 +62,12 @@ public class DatabaseTypesHandler {
        }
        return true;
     }
-    private static boolean isDate(String s) {
+    private static boolean isDate(String date) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setLenient(false);
         try {
-            new SimpleDateFormat("yyyy-MM-dd").parse(s);
-        }
-        catch(ParseException e) {
+            dateFormat.parse(date.trim());
+        } catch (ParseException pe) {
             return false;
         }
         return true;
@@ -117,11 +118,11 @@ public class DatabaseTypesHandler {
         return Double.MIN_VALUE + "";
     }
     private static String getMinimumStringValue() {
-        return ' ' + " ";
+        return Character.MIN_VALUE + " ";
     }
     private static String getMinimumDateValue() {
         Date min = new Date(Integer.MIN_VALUE);
-        return String.format("%d-%d-%d", min.getYear(), min.getMonth(), min.getDay());
+        return getDateFormat(min);
     }
     private static String getMaximumIntegerValue() {
         return Integer.MAX_VALUE + "";
@@ -131,9 +132,8 @@ public class DatabaseTypesHandler {
     }
     private static String getMaximumStringValue(int maxLength) {
         StringBuilder sb = new StringBuilder();
-        char maximumCharEver = '~';
         while(maxLength-- > 0) {
-            sb.append(maximumCharEver);
+            sb.append(Character.MAX_VALUE);
         }
         return sb.toString();
     }
@@ -179,9 +179,6 @@ public class DatabaseTypesHandler {
         }
     }
     public static String getCorrespondingJavaType(String sqlType) {
-        // VARCHAR(xx)
-        // characters indices
-        // 0123456
         if (sqlType.contains(sqlVARCHARType)) {
             return stringType;
         }
@@ -191,6 +188,32 @@ public class DatabaseTypesHandler {
             case sqlDATEType -> dateType;
             default -> null;
         };
+    }
+    private static String addStringValue(String word, int addedValue) {
+        char[] chars = word.toCharArray();
+        int i = chars.length - 1;
+        chars[i] += addedValue;
+        if(addedValue < 0) {
+            while(i >= 0 && chars[i] == Character.MIN_VALUE) {
+                chars[i] = Character.MAX_VALUE;
+                i--;
+            }
+            if(i == -1) {
+                return new String(chars).substring(1);
+            }
+            chars[i] += addedValue;
+        }
+        else {
+            while(i >= 0 && chars[i] == Character.MAX_VALUE) {
+                chars[i] = Character.MIN_VALUE;
+                i--;
+            }
+            if(i == -1) {
+                return new String(chars).substring(1);
+            }
+            chars[i] += addedValue;
+        }
+        return new String(chars);
     }
     public static Object addObjectValue(Object value, int addedValue) {
         switch (value.getClass().getName()) {
@@ -204,14 +227,11 @@ public class DatabaseTypesHandler {
                 return cal.getTime();
             }
             case doubleType -> {
-                return ((double) value) + addedValue;
+                double smallestFloatingPointDifference = 0.0000000000000001;
+                return ((double) value) + addedValue * smallestFloatingPointDifference;
             }
             case stringType -> {
-                char[] chars = ((String) value).toCharArray();
-                for (int i = 0; i < chars.length; i++) {
-                    chars[i] += addedValue;
-                }
-                return new String(chars);
+                return addStringValue((String)value, addedValue);
             }
         }
         return null;
