@@ -5,6 +5,7 @@ import engine.elements.PageMetaInfo;
 import engine.elements.Table;
 import engine.exceptions.DBAppException;
 import utilities.datatypes.DatabaseTypesHandler;
+import utilities.datatypes.Null;
 import utilities.metadata.MetadataReader;
 import utilities.serialization.Serializer;
 
@@ -18,6 +19,9 @@ public class UpdateRecordOnClusteringKey implements UpdateStrategy{
     }
     @Override
     public int updateTable() throws DBAppException {
+        if(up.getClusteringKeyValue().equals(Null.getValue())) {
+            return 0;
+        }
         String clusteringKeyType = MetadataReader.getTableColumnMetadataRecord(table.getName(), table.getClusteringKey()).getColumnType();
         Comparable keyObjectValue = DatabaseTypesHandler.getObject(up.getClusteringKeyValue(), clusteringKeyType);
         int pageContainingKeyIndex = table.findPageIndexToLookIn(keyObjectValue);

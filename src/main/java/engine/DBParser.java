@@ -6,6 +6,7 @@ import engine.elements.Record;
 import engine.exceptions.DBAppException;
 import engine.exceptions.InvalidTypeException;
 import engine.exceptions.TableDoesNotExistException;
+import engine.exceptions.update_exceptions.UpdateConditionMustOnlyHavePrimaryKeyException;
 import engine.operations.creation.CreateTableParams;
 import engine.operations.deletion.DeleteFromTableParams;
 import engine.operations.insertion.InsertIntoTableParams;
@@ -185,6 +186,11 @@ class DBParser {
         String tableName = updateStatementContext.tableName().getText();
         if(MetadataReader.search(tableName) == -1) {
             throw new TableDoesNotExistException(tableName);
+        }
+        String conditionColumn = updateStatementContext.equalityExpression().columnName().getText();
+        String tablePrimaryKey = MetadataReader.getClusteringKey(tableName);
+        if(! conditionColumn.equals(tablePrimaryKey)) {
+            throw new UpdateConditionMustOnlyHavePrimaryKeyException(tableName, conditionColumn, tablePrimaryKey);
         }
         List<String> columnNames = new ArrayList<>();
         List<String> updatingValues = new ArrayList<>();

@@ -2,7 +2,6 @@ package engine.operations;
 
 import engine.DBApp;
 import utilities.FileHandler;
-import utilities.metadata.Metadata;
 import utilities.serialization.Serializer;
 
 import java.util.HashMap;

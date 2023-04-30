@@ -3,9 +3,11 @@ package utilities.validation;
 import engine.exceptions.DBAppException;
 import engine.exceptions.InvalidTypeException;
 import engine.exceptions.TableDoesNotExistException;
+import engine.exceptions.update_exceptions.UpdateConditionMustOnlyHavePrimaryKeyException;
 import engine.exceptions.update_exceptions.UpdateListCannotBeEmptyException;
 import engine.exceptions.update_exceptions.UpdateListCannotContainPrimaryKeyException;
 import engine.operations.update.UpdateTableParams;
+import utilities.datatypes.Null;
 import utilities.metadata.MetadataReader;
 import utilities.metadata.MetadataRecord;
 
