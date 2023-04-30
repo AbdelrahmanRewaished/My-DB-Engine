@@ -2,10 +2,8 @@ package utilities.datatypes;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+
 
 
 @SuppressWarnings("ALL")
@@ -49,25 +47,12 @@ public class DatabaseTypesHandler {
         }
     }
     private static boolean isInteger(String s) {
-        if(s.isEmpty()) {
+        try{
+            Integer.parseInt(s);
+        }catch(Exception e) {
             return false;
         }
-        int i = 0;
-        boolean isNegative = false;
-        if(s.charAt(0) == '-') {
-            isNegative = true;
-            i++;
-        }
-        for(; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if(! Character.isDigit(c)) {
-                return false;
-            }
-            if(c == '.') {
-                return false;
-            }
-        }
-        return ! isNegative || i > 1;
+        return true;
     }
     private static boolean isDouble(String s) {
        try{
@@ -120,7 +105,7 @@ public class DatabaseTypesHandler {
         return type.equals(stringType) || type.equals(doubleType) && getType(value).equals(integerType) || type.equals(getType(value));
     }
     public static boolean isCompatibleTypes(String type, Object value) {
-        return type.equals(doubleType) && value instanceof Integer || type.equals(value.getClass().getName());
+        return type.equals(value.getClass().getName());
     }
     private static String getIdIntegerMinValue() {
         return "0";
@@ -154,21 +139,38 @@ public class DatabaseTypesHandler {
     }
     private static String getMaximumDateValue() {
         Date max = new Date(Long.MAX_VALUE);
-        return String.format("%d-%d-%d", max.getYear(), max.getMonth(), max.getDay());
+        return getDateFormat(max);
+    }
+    private static String getDateFormat(Date date) {
+        int day = date.getDay(), month = date.getMonth();
+        String dayFormat = day + "", monthFormat = month + "";
+        if(day <= 9) {
+            dayFormat = "0" + day;
+        }
+        if(month <= 9) {
+            monthFormat = "0" + month;
+        }
+        return String.format("%d-%s-%s", date.getYear(), monthFormat, dayFormat);
+    }
+    public static String getString(Object obj) {
+        if(obj instanceof Date) {
+            return getDateFormat((Date)obj);
+        }
+        return obj.toString();
     }
     public static Bound getBoundDataValues(String type, boolean isPrimaryKey, Integer maxStringLength) {
         switch (type) {
-            case "INT" -> {
+            case sqlINTType -> {
                 String max = getMaximumIntegerValue();
                 if (isPrimaryKey) {
                     return new Bound(getIdIntegerMinValue(), max);
                 }
                 return new Bound(getMinimumIntegerValue(), max);
             }
-            case "FLOAT" -> {
+            case sqlFLOATType -> {
                 return new Bound(getMinimumDoubleValue(), getMaximumDoubleValue());
             }
-            case "DATE" -> {
+            case sqlDATEType -> {
                 return new Bound(getMinimumDateValue(), getMaximumDateValue());
             }
             default -> {
@@ -189,6 +191,30 @@ public class DatabaseTypesHandler {
             case sqlDATEType -> dateType;
             default -> null;
         };
+    }
+    public static Object addObjectValue(Object value, int addedValue) {
+        switch (value.getClass().getName()) {
+            case integerType -> {
+                return ((int) value) + addedValue;
+            }
+            case dateType -> {
+                Calendar cal = Calendar.getInstance();
+                cal.setTime((Date) value);
+                cal.add(Calendar.DATE, addedValue);
+                return cal.getTime();
+            }
+            case doubleType -> {
+                return ((double) value) + addedValue;
+            }
+            case stringType -> {
+                char[] chars = ((String) value).toCharArray();
+                for (int i = 0; i < chars.length; i++) {
+                    chars[i] += addedValue;
+                }
+                return new String(chars);
+            }
+        }
+        return null;
     }
 
     public static void main(String[] args) {

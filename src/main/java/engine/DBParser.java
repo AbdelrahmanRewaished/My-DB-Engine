@@ -4,6 +4,7 @@ import compiler.SQLLexer;
 import compiler.SQLParser;
 import engine.elements.Record;
 import engine.exceptions.DBAppException;
+import engine.exceptions.InvalidTypeException;
 import engine.exceptions.TableDoesNotExistException;
 import engine.operations.creation.CreateTableParams;
 import engine.operations.deletion.DeleteFromTableParams;
@@ -61,9 +62,10 @@ class DBParser {
         List<String> logicalOperators = new ArrayList<>();
         SQLParser.ConditionListContext conditionListContext = selectStatement.conditionList();
         while(conditionListContext != null) {
-            conditionColumns.add(conditionListContext.columnName().getText());
-            operators.add(conditionListContext.operator().getText());
-            conditionValues.add(conditionListContext.value().getText());
+            SQLParser.ConditionExpressionContext expressionContext = conditionListContext.conditionExpression();
+            conditionColumns.add(expressionContext.columnName().getText());
+            operators.add(expressionContext.operator().getText());
+            conditionValues.add(expressionContext.value().getText());
             if(conditionListContext.logicalOperator(0) != null)
                 logicalOperators.add(conditionListContext.logicalOperator(0).getText());
             conditionListContext = conditionListContext.conditionList(0);
@@ -72,16 +74,23 @@ class DBParser {
         return null;
     }
 
+    private Comparable getConditionExpressionBoundValue(Object value, String operator) {
+        return switch(operator) {
+            case "<=" -> (Comparable) DatabaseTypesHandler.addObjectValue(value, 1);
+            case ">=" -> (Comparable) DatabaseTypesHandler.addObjectValue(value, -1);
+            default -> (Comparable) value;
+        };
+    }
     CreateTableParams getCreationParams() throws DBAppException {
         SQLParser.CreateTableStatementContext createTableStatementContext = queryContext.createTableStatement();
         String tableName = createTableStatementContext.tableName().getText();
         String clusteringKey = null;
         Hashtable<String, String> colNameType = new Hashtable<>(), colNameMin = new Hashtable<>(), colNameMax = new Hashtable<>();
-        for(SQLParser.ColumnDefinitionContext columnNameContext: createTableStatementContext.columnDefinition()) {
-            String columnName = columnNameContext.columnName().getText();
-            SQLParser.DataTypeContext dataTypeContext = columnNameContext.dataType();
-            String type = dataTypeContext.getText();
-            Bound bound;
+        for(SQLParser.ColumnDefinitionContext columnDefinitionContext: createTableStatementContext.columnDefinition()) {
+            String columnName = columnDefinitionContext.columnName().getText();
+            SQLParser.DataTypeContext dataTypeContext = columnDefinitionContext.dataType();
+            String type = dataTypeContext.getText().toUpperCase();
+            Bound bound = null;
             boolean isPrimaryKey = clusteringKey == null;
             if(isPrimaryKey) {
                 clusteringKey = columnName;
@@ -92,7 +101,36 @@ class DBParser {
             else{
                 bound = DatabaseTypesHandler.getBoundDataValues(type, isPrimaryKey, null);
             }
-            colNameType.put(columnName, DatabaseTypesHandler.getCorrespondingJavaType(type));
+            if(columnDefinitionContext.CHECK() != null) {
+                SQLParser.ColumnDefinitionConditionListContext columnDefinitionConditionListContext = columnDefinitionContext.columnDefinitionConditionList();
+                Comparable min = null, max= null;
+                while(columnDefinitionConditionListContext != null) {
+                    SQLParser.ConditionExpressionContext conditionExpressionContext = columnDefinitionConditionListContext.conditionExpression();
+                    if(! columnName.equals(conditionExpressionContext.columnName().getText())) {
+                        throw new DBAppException("Invalid Expression");
+                    }
+                    String conditionCheckValue = conditionExpressionContext.value().getText();
+                    String actualType = DatabaseTypesHandler.getType(conditionCheckValue);
+                    if(! actualType.equals(DatabaseTypesHandler.getCorrespondingJavaType(type))) {
+                        throw new InvalidTypeException(conditionCheckValue, type, actualType);
+                    }
+                    Object conditionCheckValueObject = DatabaseTypesHandler.getObject(conditionCheckValue, type);
+                    String operator = conditionExpressionContext.operator().getText();
+                    Comparable boundValue = getConditionExpressionBoundValue(conditionCheckValueObject, operator);
+                    if(operator.contains(">") && (min == null || min.compareTo(boundValue) > 0)) {
+                        min = boundValue;
+                    }
+                    if(operator.contains("<") && (max == null || max.compareTo(boundValue) < 0)) {
+                        max = boundValue;
+                    }
+                    columnDefinitionConditionListContext = columnDefinitionConditionListContext.columnDefinitionConditionList(0);
+                }
+                if(max != null)
+                    bound.setMax(DatabaseTypesHandler.getString(max));
+                if(min != null)
+                    bound.setMin(DatabaseTypesHandler.getString(min));
+            }
+            colNameType.put(columnName, DatabaseTypesHandler.getCorrespondingJavaType(type.toUpperCase()));
             colNameMin.put(columnName, bound.getMin());
             colNameMax.put(columnName, bound.getMax());
         }
@@ -126,39 +164,37 @@ class DBParser {
         return new InsertIntoTableParams(tableName, new Record(colNameValue));
     }
     UpdateTableParams getUpdateParams() throws DBAppException {
-        SQLParser.UpdateStatementContext updateCtx = queryContext.updateStatement();
-        String tableName = updateCtx.tableName().getText();
-        List<String> columnNames = new ArrayList<>();
+        SQLParser.UpdateStatementContext updateStatementContext = queryContext.updateStatement();
+        String tableName = updateStatementContext.tableName().getText();
         if(MetadataReader.search(tableName) == -1) {
             throw new TableDoesNotExistException(tableName);
         }
-        for(SQLParser.ColumnNameContext columnNameContext: updateCtx.updateList().columnName()) {
-            columnNames.add(columnNameContext.getText());
-        }
+        List<String> columnNames = new ArrayList<>();
         List<String> updatingValues = new ArrayList<>();
-        for(SQLParser.ValueContext valueCtx: updateCtx.updateList().value()) {
-            updatingValues.add(valueCtx.getText());
+        SQLParser.UpdateListContext updateListContext = updateStatementContext.updateList();
+        while(updateListContext != null) {
+            SQLParser.EqualityExpressionContext equalityExpressionContext = updateListContext.equalityExpression();
+            columnNames.add(equalityExpressionContext.columnName().getText());
+            updatingValues.add(equalityExpressionContext.value().getText());
+            updateListContext = updateListContext.updateList(0);
         }
-        String primaryKeyValue = updateCtx.value() == null ? null: updateCtx.value().getText();
+        String primaryKeyValue = updateStatementContext.equalityExpression() == null ? null: updateStatementContext.equalityExpression().value().getText();
         Hashtable<String, Object> colNameValue = getColNameValue(tableName, columnNames, updatingValues);
         return new UpdateTableParams(tableName, primaryKeyValue, new Record(colNameValue));
     }
     DeleteFromTableParams getDeletionParams() throws DBAppException {
         SQLParser.DeleteStatementContext deleteStatementContext = queryContext.deleteStatement();
         String tableName = deleteStatementContext.tableName().getText();
-        List<String> conditionColumns = new ArrayList<>();
-        List<String> conditionValues = new ArrayList<>();
-        List<String> logicalOperators = new ArrayList<>();
-        SQLParser.DeleteConditionListContext conditionListContext = deleteStatementContext.deleteConditionList();
-        while(conditionListContext != null) {
-            conditionColumns.add(conditionListContext.columnName().getText());
-            conditionValues.add(conditionListContext.value().getText());
-            if(conditionListContext.logicalOperator(0) != null)
-                logicalOperators.add(conditionListContext.logicalOperator(0).getText());
-            conditionListContext = conditionListContext.deleteConditionList(0);
-        }
         if(MetadataReader.search(tableName) == -1) {
             throw new TableDoesNotExistException(tableName);
+        }
+        List<String> conditionColumns = new ArrayList<>();
+        List<String> conditionValues = new ArrayList<>();
+        SQLParser.DeleteConditionListContext conditionListContext = deleteStatementContext.deleteConditionList();
+        while(conditionListContext != null) {
+            conditionColumns.add(conditionListContext.equalityExpression().columnName().getText());
+            conditionValues.add(conditionListContext.equalityExpression().value().getText());
+            conditionListContext = conditionListContext.deleteConditionList(0);
         }
         Hashtable<String, Object> colNameValue = getColNameValue(tableName, conditionColumns, conditionValues);
         return new DeleteFromTableParams(tableName, colNameValue);

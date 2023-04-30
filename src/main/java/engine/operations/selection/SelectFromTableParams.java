@@ -7,11 +7,18 @@ import utilities.serialization.Deserializer;
 
 import java.util.*;
 
+@SuppressWarnings("ALL")
 public class SelectFromTableParams {
     private final SQLTerm[] sqlTerms;
     private final String[] logicalOperators;
 
     public SelectFromTableParams(SQLTerm[] sqlTerms, String[] logicalOperators) throws DBAppException {
+        checkIfValidSqlExpression(sqlTerms, logicalOperators);
+        checkIfLogicalOperatorsAreValid(logicalOperators);
+        this.sqlTerms = sqlTerms;
+        this.logicalOperators = logicalOperators;
+    }
+    private void checkIfValidSqlExpression(SQLTerm[] sqlTerms, String[] logicalOperators) throws DBAppException {
         for(SQLTerm term: sqlTerms) {
             if(! term.isValidSqlTerm()) {
                 throw new DBAppException(String.format("Invalid SQL Term '%s'", term));
@@ -20,15 +27,21 @@ public class SelectFromTableParams {
         if(sqlTerms.length - 1 != logicalOperators.length) {
             throw new DBAppException("Invalid SelectFromTable Parameters");
         }
-        for(String logicalOperator: logicalOperators) {
+    }
+    private void checkIfLogicalOperatorsAreValid(String[] logicalOperators) throws DBAppException {
+        capitalizeWords(logicalOperators);
+        Set<String> set = new HashSet<>(Arrays.asList(logicalOperators));
+        for(String logicalOperator: set) {
             if(! DBApp.getSupportedSqlLogicalOperators().contains(logicalOperator)) {
                 throw new DBAppException(String.format("'%s' is an invalid logical operator. Supported operators are: %s", logicalOperator, DBApp.getSupportedSqlLogicalOperators()));
             }
         }
-        this.sqlTerms = sqlTerms;
-        this.logicalOperators = logicalOperators;
     }
-
+    private void capitalizeWords(String[] words) {
+        for(int i = 0; i < words.length; i++) {
+            words[i] = words[i].toUpperCase();
+        }
+    }
     public SQLTerm[] getSqlTerms() {
         return sqlTerms;
     }

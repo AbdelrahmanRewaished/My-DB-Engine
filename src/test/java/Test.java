@@ -3,6 +3,7 @@ import compiler.SQLParser;
 import engine.DBApp;
 import engine.elements.Page;
 import engine.elements.PageMetaInfo;
+import engine.elements.Record;
 import engine.elements.Table;
 import engine.exceptions.DBAppException;
 import org.antlr.v4.runtime.CharStream;
@@ -77,110 +78,6 @@ public class Test {
         colNameValue = getColNameValue(new String[]{"name"}, new Object[]{"Maged"});
         dbApp.updateTable(tableName, "1", colNameValue);
     }
-    private void testSQLStatement(String statement) {
-        // Create a CharStream from the SQL statement
-        CharStream input = CharStreams.fromString(statement);
-        // Create a lexer from the input
-        SQLLexer lexer = new SQLLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-        // Create a parser from the tokens
-        SQLParser parser = new SQLParser(tokens);
-
-        char command = statement.charAt(0);
-        switch(command) {
-            case 'S':
-                SQLParser.SelectStatementContext selectCtx = parser.selectStatement();
-                if(parser.getNumberOfSyntaxErrors() > 0) {
-                    break;
-                }
-                List<String> tableNames = new ArrayList<>();
-                for(SQLParser.TableNameContext tableCtx: selectCtx.tableList().tableName()) {
-                    tableNames.add(tableCtx.getText());
-                }
-                List<String> columnNames = new ArrayList<>();
-                List<String> operators = new ArrayList<>();
-                List<String> conditionValues = new ArrayList<>();
-                List<String> conditionColumns = new ArrayList<>();
-                List<String> logicalOperators = new ArrayList<>();
-                SQLParser.ConditionListContext conCtx = selectCtx.conditionList();
-                while(conCtx != null) {
-                    conditionColumns.add(conCtx.columnName().getText());
-                    operators.add(conCtx.operator().getText());
-                    conditionValues.add(conCtx.value().getText());
-                    if(conCtx.logicalOperator(0) != null)
-                        logicalOperators.add(conCtx.logicalOperator(0).getText());
-                    conCtx = conCtx.conditionList(0);
-                }
-                System.out.println(String.format("Tables: %s\nSelected Columns: %s\nCondition Columns: %s\nOperators: %s\nCondition Values: %s\nLogical Operators: %s", tableNames, "Everything", conditionColumns, operators, conditionValues, logicalOperators));
-                break;
-            case 'C':
-                SQLParser.CreateTableStatementContext createCtx = parser.createTableStatement();
-                String tableName = createCtx.tableName().getText();
-                columnNames = new ArrayList<>();
-                List<String> types = new ArrayList<>();
-                for(SQLParser.ColumnDefinitionContext colCtx: createCtx.columnDefinition()) {
-                    columnNames.add(colCtx.columnName().getText());
-                    types.add(colCtx.dataType().getText());
-                }
-                System.out.println(String.format("Table: %s\nColumns: %s\nTypes: %s", tableName, columnNames, types));
-                break;
-            case 'I':
-                SQLParser.InsertStatementContext insertCtx = parser.insertStatement();
-                if(parser.getNumberOfSyntaxErrors() > 0) {
-                    break;
-                }
-                tableName = insertCtx.tableName().getText();
-                List<String> values = new ArrayList<>();
-                for(SQLParser.ValueContext valueCtx: insertCtx.valueList().value()) {
-                    values.add(valueCtx.getText());
-                }
-                System.out.println(String.format("Table: %s\nValues: %s", tableName, values));
-                break;
-            case 'U':
-                SQLParser.UpdateStatementContext updateCtx = parser.updateStatement();
-                if(parser.getNumberOfSyntaxErrors() > 0) {
-                    break;
-                }
-                tableName = updateCtx.tableName().getText();
-                columnNames = new ArrayList<>();
-                values = new ArrayList<>();
-                String conditionColumn, operator = "=", conditionValue;
-                for(SQLParser.ColumnNameContext columnNameContext: updateCtx.updateList().columnName()) {
-                    columnNames.add(columnNameContext.getText());
-                }
-                conditionColumn = updateCtx.columnName().getText();
-                conditionValue = updateCtx.value().getText();
-                for(SQLParser.ValueContext valueCtx: updateCtx.updateList().value()) {
-                    values.add(valueCtx.getText());
-                }
-                System.out.println(String.format("Table: %s\nColumns: %s\nValues: %s\nCondition Columns: %s\nOperator: %s\nConditionValues: %s", tableName, columnNames, values, conditionColumn, operator, conditionValue));
-                break;
-
-            case 'D':
-                SQLParser.DeleteStatementContext deleteCtx = parser.deleteStatement();
-                if(parser.getNumberOfSyntaxErrors() > 0) {
-                    break;
-                }
-                System.out.println(deleteCtx.deleteConditionList().getText());
-                tableName = deleteCtx.tableName().getText();
-                conditionColumns = new ArrayList<>();
-                conditionValues = new ArrayList<>();
-                logicalOperators = new ArrayList<>();
-                SQLParser.DeleteConditionListContext deleteConditionList = deleteCtx.deleteConditionList();
-                while(deleteConditionList != null) {
-                    conditionColumns.add(deleteConditionList.columnName().getText());
-                    conditionValues.add(deleteConditionList.value().getText());
-                    if(deleteConditionList.logicalOperator(0) != null)
-                        logicalOperators.add(deleteConditionList.logicalOperator(0).getText());
-                    deleteConditionList = deleteConditionList.deleteConditionList(0);
-                }
-                System.out.println(String.format("Table: %s\nCondition Columns: %s\nCondition values: %s\nLogical Operators: %s", tableName, conditionColumns, conditionValues, logicalOperators));
-                break;
-            default:
-                parser.query();
-        }
-    }
     public static void showAllTableRecords(String tableName) {
         PrintWriter pw = new PrintWriter(System.out);
         pw.println("Table " + tableName + " content: ");
@@ -191,42 +88,6 @@ public class Test {
         }
         pw.println();
         pw.flush();
-    }
-
-    public static void main(String[] args) throws DBAppException {
-        DBApp dbApp = new DBApp();
-        dbApp.init();
-//        dbApp.parseSQL(new StringBuffer("CREATE TABLE Employee (id INT PRIMARY KEY, name VARCHAR(20), salary FLOAT, birthdate DATE)"));
-//        dbApp.parseSQL(new StringBuffer("CREATE TABLE Manager (id INT PRIMARY KEY, name VARCHAR(20), salary FLOAT, depId INT)"));
-//        Random r = new Random();
-//        Set<Integer> emp_set = new HashSet<>(), man_set = new HashSet<>();
-//        for(int i = 0; i < 20; i++) {
-//            int emp_id = r.nextInt(100);
-//            while(emp_set.contains(emp_id)) {
-//                emp_id = r.nextInt(100);
-//            }
-//            if(emp_id % 3 == 0) {
-//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Employee (id, name) VALUES (%d, %s)", emp_id, "abdo")));
-//            }
-//            else {
-//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Employee (id, name, salary, birthdate) VALUES (%d, %s, %d, %s)", emp_id, "abdo", 12000, "2002-02-10")));
-//            }
-//            emp_set.add(emp_id);
-//            int man_id = r.nextInt(100);
-//            while(man_set.contains(man_id)) {
-//                man_id = r.nextInt(100);
-//            }
-//            if(emp_id % 3 == 0) {
-//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Manager (id, name) VALUES (%d, %s)", man_id, "abdo")));
-//            }
-//            else {
-//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Manager (id, name, salary, depId) VALUES (%d, %s, %d, %d)", man_id, "abdo", 170000, man_id)));
-//            }
-//            man_set.add(man_id);
-//        }
-//
-        showAllTableRecords("Employee");
-        showAllTableRecords("Manager");
     }
 }
 

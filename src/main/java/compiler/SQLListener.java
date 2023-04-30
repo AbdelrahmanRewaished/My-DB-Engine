@@ -97,16 +97,6 @@ public interface SQLListener extends ParseTreeListener {
 	 */
 	void exitValueList(SQLParser.ValueListContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link SQLParser#updateList}.
-	 * @param ctx the parse tree
-	 */
-	void enterUpdateList(SQLParser.UpdateListContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SQLParser#updateList}.
-	 * @param ctx the parse tree
-	 */
-	void exitUpdateList(SQLParser.UpdateListContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link SQLParser#conditionList}.
 	 * @param ctx the parse tree
 	 */
@@ -117,6 +107,16 @@ public interface SQLListener extends ParseTreeListener {
 	 */
 	void exitConditionList(SQLParser.ConditionListContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SQLParser#conditionExpression}.
+	 * @param ctx the parse tree
+	 */
+	void enterConditionExpression(SQLParser.ConditionExpressionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#conditionExpression}.
+	 * @param ctx the parse tree
+	 */
+	void exitConditionExpression(SQLParser.ConditionExpressionContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SQLParser#deleteConditionList}.
 	 * @param ctx the parse tree
 	 */
@@ -126,6 +126,26 @@ public interface SQLListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitDeleteConditionList(SQLParser.DeleteConditionListContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SQLParser#updateList}.
+	 * @param ctx the parse tree
+	 */
+	void enterUpdateList(SQLParser.UpdateListContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#updateList}.
+	 * @param ctx the parse tree
+	 */
+	void exitUpdateList(SQLParser.UpdateListContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SQLParser#equalityExpression}.
+	 * @param ctx the parse tree
+	 */
+	void enterEqualityExpression(SQLParser.EqualityExpressionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#equalityExpression}.
+	 * @param ctx the parse tree
+	 */
+	void exitEqualityExpression(SQLParser.EqualityExpressionContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SQLParser#tableReference}.
 	 * @param ctx the parse tree
@@ -156,6 +176,16 @@ public interface SQLListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitColumnDefinition(SQLParser.ColumnDefinitionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SQLParser#columnDefinitionConditionList}.
+	 * @param ctx the parse tree
+	 */
+	void enterColumnDefinitionConditionList(SQLParser.ColumnDefinitionConditionListContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#columnDefinitionConditionList}.
+	 * @param ctx the parse tree
+	 */
+	void exitColumnDefinitionConditionList(SQLParser.ColumnDefinitionConditionListContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SQLParser#dataType}.
 	 * @param ctx the parse tree

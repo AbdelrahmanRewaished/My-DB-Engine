@@ -15,4 +15,12 @@ public class Bound {
     public String getMax() {
         return max;
     }
+
+    public void setMin(String min) {
+        this.min = min;
+    }
+
+    public void setMax(String max) {
+        this.max = max;
+    }
 }

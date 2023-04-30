@@ -32,7 +32,7 @@ public class UpdateValidator {
             throw new TableDoesNotExistException(p.getTableName());
         }
         String clusteringKey = MetadataReader.getClusteringKey(p.getTableName());
-        if(p.getColNameValue().contains(clusteringKey)) {
+        if(p.getColNameValue().containsKey(clusteringKey)) {
             throw new UpdateListCannotContainPrimaryKeyException();
         }
         checkValuesValidity(p.getTableName(), p.getColNameValue());

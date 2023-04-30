@@ -64,23 +64,35 @@ public interface SQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitValueList(SQLParser.ValueListContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SQLParser#updateList}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitUpdateList(SQLParser.UpdateListContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link SQLParser#conditionList}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitConditionList(SQLParser.ConditionListContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link SQLParser#conditionExpression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitConditionExpression(SQLParser.ConditionExpressionContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link SQLParser#deleteConditionList}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitDeleteConditionList(SQLParser.DeleteConditionListContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#updateList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitUpdateList(SQLParser.UpdateListContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#equalityExpression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitEqualityExpression(SQLParser.EqualityExpressionContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SQLParser#tableReference}.
 	 * @param ctx the parse tree
@@ -99,6 +111,12 @@ public interface SQLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitColumnDefinition(SQLParser.ColumnDefinitionContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#columnDefinitionConditionList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitColumnDefinitionConditionList(SQLParser.ColumnDefinitionConditionListContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SQLParser#dataType}.
 	 * @param ctx the parse tree

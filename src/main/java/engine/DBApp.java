@@ -134,7 +134,7 @@ public class DBApp {
         if(parser.isHavingSyntaxError()) {
             throw new DBAppException("Invalid Statement");
         }
-        switch (parser.getCommandType()) {
+        switch (parser.getCommandType().toUpperCase()) {
             case "SELECT" -> {
                 SelectFromTableParams sp = parser.getSelectionParams();
                 return selectFromTable(sp.getSqlTerms(), sp.getLogicalOperators());
