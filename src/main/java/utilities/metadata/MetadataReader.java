@@ -1,5 +1,7 @@
 package utilities.metadata;
 
+import engine.DBApp;
+import engine.exceptions.DBAppException;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 
@@ -18,22 +20,22 @@ public class MetadataReader {
         isModified = true;
     }
 
-    public static synchronized List<CSVRecord> getCSVRecords() {
+    public static synchronized List<CSVRecord> getCSVRecords() throws DBAppException {
         if(records == null || isModified) {
             try {
-                Reader formatReader = Files.newBufferedReader(Paths.get(Metadata.getCSVFileLocation()));
+                Reader formatReader = Files.newBufferedReader(Paths.get(DBApp.getCSVFileLocation()));
                 records = CSVFormat.DEFAULT.parse(formatReader).getRecords();
                 formatReader.close();
                 isModified = false;
             }
             catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new DBAppException("Database Engine has not been initialized");
             }
         }
         return records;
     }
 
-    public static int search(String tableName) {
+    public static int search(String tableName) throws DBAppException {
         List<CSVRecord> records = getCSVRecords();
         for(int i = 0; i < records.size(); i++) {
             MetadataRecord currentCSVRecord = new MetadataRecord(records.get(i));
@@ -44,7 +46,7 @@ public class MetadataReader {
         }
         return -1;
     }
-    public static List<MetadataRecord> getTableMetadataRecords(String tableName) {
+    public static List<MetadataRecord> getTableMetadataRecords(String tableName) throws DBAppException {
         List<MetadataRecord> recordList = new ArrayList<>();
         List<CSVRecord> csvRecords = getCSVRecords();
         for(int i = search(tableName); i < csvRecords.size(); i++) {
@@ -56,7 +58,7 @@ public class MetadataReader {
         }
         return recordList;
     }
-    public static MetadataRecord getTableColumnMetadataRecord(String tableName, String columnName) {
+    public static MetadataRecord getTableColumnMetadataRecord(String tableName, String columnName) throws DBAppException {
         for(MetadataRecord record: getTableMetadataRecords(tableName)) {
             if(record.getColumnName().equals(columnName)) {
                 return record;
@@ -64,7 +66,7 @@ public class MetadataReader {
         }
         return null;
     }
-    public static Set<String> getTableColumnNames(String tableName) {
+    public static Set<String> getTableColumnNames(String tableName) throws DBAppException {
         List<MetadataRecord> records = MetadataReader.getTableMetadataRecords(tableName);
         Set<String> existingTableColumnNames = new HashSet<>();
         for(MetadataRecord record: records) {
@@ -72,7 +74,7 @@ public class MetadataReader {
         }
         return existingTableColumnNames;
     }
-    public static String getClusteringKey(String tableName) {
+    public static String getClusteringKey(String tableName) throws DBAppException {
         for(MetadataRecord record: getTableMetadataRecords(tableName)) {
             if(record.isClusteringKey()) {
                return record.getColumnName();
@@ -80,7 +82,7 @@ public class MetadataReader {
         }
         return null;
     }
-    public static Hashtable<String, String> getTableColNameType(String tableName) {
+    public static Hashtable<String, String> getTableColNameType(String tableName) throws DBAppException {
         List<MetadataRecord> metadataRecords = getTableMetadataRecords(tableName);
         Hashtable<String, String> colNameType = new Hashtable<>();
         for(MetadataRecord record: metadataRecords) {

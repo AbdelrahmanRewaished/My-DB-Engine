@@ -7,7 +7,7 @@ import engine.elements.Record;
 import engine.elements.Table;
 import engine.exceptions.DBAppException;
 import engine.exceptions.insertion_exceptions.PrimaryKeyAlreadyExistsException;
-import utilities.datatypes.NullValueWrapper;
+import utilities.datatypes.Null;
 import utilities.metadata.MetadataReader;
 import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
@@ -149,11 +149,11 @@ public class Insertion {
         }
         Serializer.serialize(currentPage.getPageInfo().getLocation(), currentPage);
     }
-    private void adjustInsertedRecord(String tableName, Record record) {
+    private void adjustInsertedRecord(String tableName, Record record) throws DBAppException {
         Set<String> columnNames = MetadataReader.getTableColumnNames(tableName);
         for(String columnName: columnNames) {
             if(! record.containsKey(columnName)) {
-                record.put(columnName, new NullValueWrapper());
+                record.put(columnName, new Null());
             }
         }
     }

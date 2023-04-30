@@ -1,5 +1,7 @@
 package utilities.metadata;
 
+import engine.DBApp;
+import engine.exceptions.DBAppException;
 import engine.operations.creation.CreateTableParams;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -14,7 +16,7 @@ public class MetadataWriter {
     private static CSVPrinter getAppender() {
         CSVPrinter appender;
         try {
-            FileWriter fileWriter = new FileWriter(Metadata.getCSVFileLocation(), true);
+            FileWriter fileWriter = new FileWriter(DBApp.getCSVFileLocation(), true);
             appender = new CSVPrinter(fileWriter, CSVFormat.DEFAULT);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -24,7 +26,7 @@ public class MetadataWriter {
     private static CSVPrinter getPrinter() {
         CSVPrinter printer;
         try {
-            FileWriter fileWriter = new FileWriter(Metadata.getCSVFileLocation());
+            FileWriter fileWriter = new FileWriter(DBApp.getCSVFileLocation());
             printer = new CSVPrinter(fileWriter, CSVFormat.DEFAULT);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -51,7 +53,7 @@ public class MetadataWriter {
             throw new RuntimeException(e);
         }
     }
-    public static synchronized void deleteTableInfo(int tableInfoIndex, String tableName) {
+    public static synchronized void deleteTableInfo(int tableInfoIndex, String tableName) throws DBAppException {
         List<CSVRecord> records = MetadataReader.getCSVRecords();
         while(! records.isEmpty() && tableInfoIndex < records.size()) {
             MetadataRecord currentRecord = new MetadataRecord(records.get(tableInfoIndex));

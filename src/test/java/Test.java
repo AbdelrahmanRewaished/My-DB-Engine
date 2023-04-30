@@ -1,18 +1,14 @@
-import compiler.SQLLexer;
-import compiler.SQLParser;
 import engine.DBApp;
 import engine.elements.Page;
 import engine.elements.PageMetaInfo;
-import engine.elements.Record;
 import engine.elements.Table;
 import engine.exceptions.DBAppException;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import utilities.serialization.Deserializer;
 
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Hashtable;
 
 import static utilities.datatypes.DatabaseTypesHandler.*;
 
@@ -88,47 +84,6 @@ public class Test {
         }
         pw.println();
         pw.flush();
-    }
-
-    public static void main(String[] args) throws DBAppException {
-        DBApp dbApp = new DBApp();
-        dbApp.init();
-//        dbApp.dropTable("Employee");
-//        dbApp.parseSQL(new StringBuffer("create Table Employee (id int check(id > 0 and id < 100) primary KeY, name varChAR(20), salary float, birth_time Date check(birth_time > 1500-01-01 and birth_time < 2500-12-31))"));
-//        dbApp.parseSQL(new StringBuffer("CREATE TABLE Manager (id INT PRIMARY KEY, name VARCHAR(20), salary FLOAT, depId INT)"));
-//        Random r = new Random();
-//        Set<Integer> emp_set = new HashSet<>(), man_set = new HashSet<>();
-//        for(int i = 0; i < 20; i++) {
-//            int emp_id = r.nextInt(100);
-//            while(emp_set.contains(emp_id)) {
-//                emp_id = r.nextInt(100);
-//            }
-//            if(emp_id % 3 == 0) {
-//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Employee (id, name) VALUES (%d, %s)", emp_id, "abdo")));
-//            }
-//            else {
-//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Employee (id, name, salary, birthdate) VALUES (%d, %s, %d, %s)", emp_id, "abdo", 12000, "2002-02-10")));
-//            }
-//            emp_set.add(emp_id);
-//            int man_id = r.nextInt(100);
-//            while(man_set.contains(man_id)) {
-//                man_id = r.nextInt(100);
-//            }
-//            if(emp_id % 3 == 0) {
-//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Manager (id, name) VALUES (%d, %s)", man_id, "abdo")));
-//            }
-//            else {
-//                dbApp.parseSQL(new StringBuffer(String.format("INSERT INTO Manager (id, name, salary, depId) VALUES (%d, %s, %d, %d)", man_id, "abdo", 170000, man_id)));
-//            }
-//            man_set.add(man_id);
-//        }
-          dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (2, abdo, 15000, 2501-12-31)"));
-//        Record record = new Record();
-//        record.put("name", "abdo");
-//        record.put("salary", 3000.0);
-//        dbApp.updateTable("Manager", "-1", record);
-//        showAllTableRecords("Employee");
-//        showAllTableRecords("Manager");
     }
 }
 

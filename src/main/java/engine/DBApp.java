@@ -16,7 +16,6 @@ import engine.operations.selection.Selection;
 import engine.operations.update.Update;
 import engine.operations.update.UpdateTableParams;
 
-import java.io.PrintWriter;
 import java.util.*;
 
 @SuppressWarnings("SpellCheckingInspection")
@@ -27,6 +26,7 @@ public class DBApp {
     private static final String tablesRootFolder = rootDatabaseFolder + "/data/";
     private static final String serializedTablesInfoLocation = tablesRootFolder + "serializedTablesInfo" + fileExtension;
 
+    private static final String csvFileLocation = rootDatabaseFolder + "/metadata.csv";
     public static String getRootDatabaseFolder() {
         return rootDatabaseFolder;
     }
@@ -36,6 +36,10 @@ public class DBApp {
     public static String getSerializedTablesInfoLocation() {
         return serializedTablesInfoLocation;
     }
+    public static String getCSVFileLocation() {
+        return csvFileLocation;
+    }
+
     public static Set<String> getSupportedSqlLogicalOperators() {return supportedSqlLogicalOperators;}
     public static String getFileExtension() {return fileExtension;}
     // execute at application startup

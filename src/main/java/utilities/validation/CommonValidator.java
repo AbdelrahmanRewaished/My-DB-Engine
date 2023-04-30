@@ -5,6 +5,7 @@ import engine.exceptions.DBAppException;
 import engine.exceptions.InvalidTypeException;
 import engine.exceptions.ValueOutOfRangeException;
 import utilities.datatypes.DatabaseTypesHandler;
+import utilities.datatypes.Null;
 import utilities.metadata.MetadataReader;
 import utilities.metadata.MetadataRecord;
 
@@ -15,6 +16,9 @@ import java.util.List;
 public class CommonValidator {
     private CommonValidator(){}
     private static boolean isValueInRange(MetadataRecord currentRecord, Object value) {
+        if(value instanceof Null) {
+            return true;
+        }
         Comparable maximum = DatabaseTypesHandler.getObject(currentRecord.getMaxValue(), currentRecord.getColumnType());
         if(value instanceof String) {
             String strValue = (String) value;
@@ -49,13 +53,16 @@ public class CommonValidator {
             assert columnMetadataRecord != null;
             if(! isValueInRange(columnMetadataRecord, value)) {
                 String minimum = columnMetadataRecord.getMinValue(), maximum = columnMetadataRecord.getMaxValue();
-                throw new ValueOutOfRangeException(value.toString(), minimum, maximum);
+                throw new ValueOutOfRangeException(DatabaseTypesHandler.getString(value), minimum, maximum);
             }
         }
     }
     static void checkValuesValidity(String tableName, Hashtable<String, Object> record) throws DBAppException {
         List<MetadataRecord> metadataRecords = MetadataReader.getTableMetadataRecords(tableName);
         for(String columnName: record.keySet()) {
+            if(record.get(columnName) instanceof Null) {
+                continue;
+            }
             checkValueValidity(metadataRecords, columnName, record.get(columnName));
         }
     }

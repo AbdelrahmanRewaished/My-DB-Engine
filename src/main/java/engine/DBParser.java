@@ -81,6 +81,46 @@ class DBParser {
             default -> (Comparable) value;
         };
     }
+    private void adjustBound(Bound bound, SQLParser.ColumnDefinitionConditionListContext columnDefinitionConditionListContext, String columnName, String type) throws DBAppException {
+        Comparable min = null, max= null;
+        while(columnDefinitionConditionListContext != null) {
+            SQLParser.ConditionExpressionContext conditionExpressionContext = columnDefinitionConditionListContext.conditionExpression();
+            if(! columnName.equals(conditionExpressionContext.columnName().getText())) {
+                throw new DBAppException("Invalid Expression");
+            }
+            String conditionCheckValue = conditionExpressionContext.value().getText();
+            String actualType = DatabaseTypesHandler.getType(conditionCheckValue);
+            if(! actualType.equals(DatabaseTypesHandler.getCorrespondingJavaType(type))) {
+                throw new InvalidTypeException(conditionCheckValue, type, actualType);
+            }
+            Object conditionCheckValueObject = DatabaseTypesHandler.getObject(conditionCheckValue, DatabaseTypesHandler.getCorrespondingJavaType(type));
+            String operator = conditionExpressionContext.operator().getText();
+            Comparable boundValue = getConditionExpressionBoundValue(conditionCheckValueObject, operator);
+            if(operator.contains(">") && (min == null || min.compareTo(boundValue) > 0)) {
+                min = boundValue;
+            }
+            else if(operator.contains("<") && (max == null || max.compareTo(boundValue) < 0)) {
+                max = boundValue;
+            }
+            else if(operator.equals("=")) {
+                if(min == null || min.compareTo(boundValue) > 0) {
+                    min = boundValue;
+                }
+                if(max == null || max.compareTo(boundValue) < 0) {
+                    max = boundValue;
+                }
+            }
+            columnDefinitionConditionListContext = columnDefinitionConditionListContext.columnDefinitionConditionList(0);
+        }
+        if(max != null) {
+            String maxBound = DatabaseTypesHandler.getString(max);
+            bound.setMax(maxBound);
+        }
+        if(min != null) {
+            String minBound = DatabaseTypesHandler.getString(min);
+            bound.setMin(minBound);
+        }
+    }
     CreateTableParams getCreationParams() throws DBAppException {
         SQLParser.CreateTableStatementContext createTableStatementContext = queryContext.createTableStatement();
         String tableName = createTableStatementContext.tableName().getText();
@@ -102,33 +142,7 @@ class DBParser {
                 bound = DatabaseTypesHandler.getBoundDataValues(type, isPrimaryKey, null);
             }
             if(columnDefinitionContext.CHECK() != null) {
-                SQLParser.ColumnDefinitionConditionListContext columnDefinitionConditionListContext = columnDefinitionContext.columnDefinitionConditionList();
-                Comparable min = null, max= null;
-                while(columnDefinitionConditionListContext != null) {
-                    SQLParser.ConditionExpressionContext conditionExpressionContext = columnDefinitionConditionListContext.conditionExpression();
-                    if(! columnName.equals(conditionExpressionContext.columnName().getText())) {
-                        throw new DBAppException("Invalid Expression");
-                    }
-                    String conditionCheckValue = conditionExpressionContext.value().getText();
-                    String actualType = DatabaseTypesHandler.getType(conditionCheckValue);
-                    if(! actualType.equals(DatabaseTypesHandler.getCorrespondingJavaType(type))) {
-                        throw new InvalidTypeException(conditionCheckValue, type, actualType);
-                    }
-                    Object conditionCheckValueObject = DatabaseTypesHandler.getObject(conditionCheckValue, DatabaseTypesHandler.getCorrespondingJavaType(type));
-                    String operator = conditionExpressionContext.operator().getText();
-                    Comparable boundValue = getConditionExpressionBoundValue(conditionCheckValueObject, operator);
-                    if(operator.contains(">") && (min == null || min.compareTo(boundValue) > 0)) {
-                        min = boundValue;
-                    }
-                    if(operator.contains("<") && (max == null || max.compareTo(boundValue) < 0)) {
-                        max = boundValue;
-                    }
-                    columnDefinitionConditionListContext = columnDefinitionConditionListContext.columnDefinitionConditionList(0);
-                }
-                if(max != null)
-                    bound.setMax(DatabaseTypesHandler.getString(max));
-                if(min != null)
-                    bound.setMin(DatabaseTypesHandler.getString(min));
+                adjustBound(bound, columnDefinitionContext.columnDefinitionConditionList(), columnName, type);
             }
             colNameType.put(columnName, DatabaseTypesHandler.getCorrespondingJavaType(type.toUpperCase()));
             colNameMin.put(columnName, bound.getMin());

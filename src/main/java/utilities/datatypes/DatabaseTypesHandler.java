@@ -39,7 +39,7 @@ public class DatabaseTypesHandler {
 
     public static String getSqlVarcharType() {return sqlVARCHARType;}
 
-    public static Date getDate(String date) {
+    private static Date getDate(String date) {
         try {
             return new SimpleDateFormat("yyyy-MM-dd").parse(date);
         } catch (ParseException e) {
@@ -85,8 +85,8 @@ public class DatabaseTypesHandler {
         return stringType;
     }
     public static Comparable getObject(String object, String objectType) {
-        if(object.toLowerCase().equals("null")) {
-            return null;
+        if(object.toLowerCase().equals(Null.getValue())) {
+            return new Null();
         }
         if(objectType.equals(stringType)) {
             return object;
@@ -103,10 +103,13 @@ public class DatabaseTypesHandler {
         return object;
     }
     public static boolean isCompatibleTypes(String type, String value) {
+        if(value.toLowerCase().equals(Null.getValue())) {
+            return true;
+        }
         return type.equals(stringType) || type.equals(doubleType) && getType(value).equals(integerType) || type.equals(getType(value));
     }
     public static boolean isCompatibleTypes(String type, Object value) {
-        return type.equals(value.getClass().getName());
+        return value instanceof Null || type.equals(value.getClass().getName());
     }
     private static String getIdIntegerMinValue() {
         return "0";
@@ -142,15 +145,8 @@ public class DatabaseTypesHandler {
         return getDateFormat(max);
     }
     private static String getDateFormat(Date date) {
-        int day = date.getDay(), month = date.getMonth();
-        String dayFormat = day + "", monthFormat = month + "";
-        if(day <= 9) {
-            dayFormat = "0" + day;
-        }
-        if(month <= 9) {
-            monthFormat = "0" + month;
-        }
-        return String.format("%d-%s-%s", date.getYear(), monthFormat, dayFormat);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        return formatter.format(date);
     }
     public static String getString(Object obj) {
         if(obj instanceof Date) {
@@ -209,7 +205,7 @@ public class DatabaseTypesHandler {
                 i--;
             }
             if(i == -1) {
-                return new String(chars).substring(1);
+                return Character.MIN_VALUE + new String(chars);
             }
             chars[i] += addedValue;
         }

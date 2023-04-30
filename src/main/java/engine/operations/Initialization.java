@@ -12,7 +12,7 @@ public class Initialization {
     private Initialization(){}
 
     private static void createMetadataFile() {
-        FileHandler.createFile(Metadata.getCSVFileLocation());
+        FileHandler.createFile(DBApp.getCSVFileLocation());
     }
     public static void init() {
         if(FileHandler.isFileExisting(DBApp.getTablesRootFolder())) {

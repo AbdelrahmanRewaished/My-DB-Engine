@@ -2,7 +2,7 @@ package engine.elements;
 
 
 import engine.operations.selection.SQLTerm;
-import utilities.datatypes.NullValueWrapper;
+import utilities.datatypes.Null;
 
 import java.io.Serial;
 import java.util.*;
@@ -33,7 +33,7 @@ public class Record extends Hashtable<String, Object> {
         if(term._strColumnName == null && term._strOperator == null && term._objValue == null) {
             return true;
         }
-        if(term._objValue instanceof NullValueWrapper) {
+        if(term._objValue instanceof Null) {
             return false;
         }
         assert term._strOperator != null;
