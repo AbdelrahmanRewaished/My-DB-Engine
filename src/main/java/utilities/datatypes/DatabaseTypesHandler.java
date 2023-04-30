@@ -124,8 +124,7 @@ public class DatabaseTypesHandler {
         return Character.MIN_VALUE + " ";
     }
     private static String getMinimumDateValue() {
-        Date min = new Date(Integer.MIN_VALUE);
-        return getDateFormat(min);
+        return "1000-01-01";
     }
     private static String getMaximumIntegerValue() {
         return Integer.MAX_VALUE + "";

@@ -6,9 +6,7 @@ import engine.exceptions.DBAppException;
 import utilities.serialization.Deserializer;
 
 import java.io.PrintWriter;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Hashtable;
+import java.util.*;
 
 import static utilities.datatypes.DatabaseTypesHandler.*;
 
@@ -90,7 +88,7 @@ public class Test {
         DBApp dbApp = new DBApp();
         dbApp.init();
 //        dbApp.dropTable("Employee");
-        dbApp.parseSQL(new StringBuffer("create Table Employee (id int check(id > 0 and id < 100) primary KeY, name varChAR(20), salary float, birth_time Date check(birth_time > 1500-01-01 and birth_time < 2500-12-31))"));
+//        dbApp.parseSQL(new StringBuffer("create Table Employee (id int check(id > 0 and id < 100) primary KeY, name varChAR(20), salary float check (salary > 0 and salary < 1000000), birth_time Date check(birth_time = 2500-12-31))"));
 //        dbApp.parseSQL(new StringBuffer("CREATE TABLE Manager (id INT PRIMARY KEY, name VARCHAR(20), salary FLOAT, depId INT)"));
 //        Random r = new Random();
 //        Set<Integer> emp_set = new HashSet<>(), man_set = new HashSet<>();
@@ -123,9 +121,11 @@ public class Test {
 //        record.put("name", "abdo");
 //        record.put("salary", 3000.0);
 //        dbApp.updateTable("Manager", "-1", record);
-          dbApp.parseSQL(new StringBuffer("update Employee set salary = 15000 where id = 1"));
+          dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, birth_time) values (null, null, null)"));
 //        showAllTableRecords("Employee");
 //        showAllTableRecords("Manager");
+
+
     }
 }
 

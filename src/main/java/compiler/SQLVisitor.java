@@ -124,6 +124,12 @@ public interface SQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitDataType(SQLParser.DataTypeContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link SQLParser#word}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitWord(SQLParser.WordContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link SQLParser#columnName}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -171,6 +177,12 @@ public interface SQLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitString(SQLParser.StringContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#dateValue}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDateValue(SQLParser.DateValueContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SQLParser#date}.
 	 * @param ctx the parse tree

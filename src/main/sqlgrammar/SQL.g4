@@ -38,11 +38,13 @@ columnDefinitionConditionList: conditionExpression (AND columnDefinitionConditio
 
 dataType: INT | FLOAT | VARCHAR '(' integer ')' | DATE ;
 
-columnName: (LETTER)+ (DIGIT)*;
+word: (LETTER)+ (DIGIT)*;
 
-tableName: (LETTER)+ (DIGIT)*;
+columnName: word;
 
-value: integer | string | date | double;
+tableName: word;
+
+value: integer | string | date | double | NULL;
 
 operator: '=' | '<' | '>' | '<=' | '>=' ;
 
@@ -52,9 +54,11 @@ integer: (DIGIT)+;
 
 double: (DIGIT)+'.'(DIGIT)+;
 
-string: (LETTER)+;
+string : '\'' word '\'';
 
-date: DIGIT DIGIT DIGIT DIGIT'-'DIGIT DIGIT'-'DIGIT DIGIT;
+dateValue: DIGIT DIGIT DIGIT DIGIT'-'DIGIT DIGIT'-'DIGIT DIGIT;
+
+date: '\'' dateValue '\'';
 
 SELECT: 'select' | 'selecT' | 'seleCt' | 'seleCT' | 'selEct' | 'selEcT' | 'selECt' | 'selECT' | 'seLect' | 'seLecT' | 'seLeCt' | 'seLeCT' | 'seLEct' | 'seLEcT' | 'seLECt' | 'seLECT' | 'sElect' | 'sElecT' | 'sEleCt' | 'sEleCT' | 'sElEct' | 'sElEcT' | 'sElECt' | 'sElECT' | 'sELect' | 'sELecT' | 'sELeCt' | 'sELeCT' | 'sELEct' | 'sELEcT' | 'sELECt' | 'sELECT' | 'Select' | 'SelecT' | 'SeleCt' | 'SeleCT' | 'SelEct' | 'SelEcT' | 'SelECt' | 'SelECT' | 'SeLect' | 'SeLecT' | 'SeLeCt' | 'SeLeCT' | 'SeLEct' | 'SeLEcT' | 'SeLECt' | 'SeLECT' | 'SElect' | 'SElecT' | 'SEleCt' | 'SEleCT' | 'SElEct' | 'SElEcT' | 'SElECt' | 'SElECT' | 'SELect' | 'SELecT' | 'SELeCt' | 'SELeCT' | 'SELEct' | 'SELEcT' | 'SELECt' | 'SELECT' ;
 
@@ -95,6 +99,8 @@ VARCHAR: 'varchar' | 'varchaR' | 'varchAr' | 'varchAR' | 'varcHar' | 'varcHaR' |
 DATE: 'date' | 'datE' | 'daTe' | 'daTE' | 'dAte' | 'dAtE' | 'dATe' | 'dATE' | 'Date' | 'DatE' | 'DaTe' | 'DaTE' | 'DAte' | 'DAtE' | 'DATe' | 'DATE';
 
 CHECK: 'check' | 'checK' | 'cheCk' | 'cheCK' | 'chEck' | 'chEcK' | 'chECk' | 'chECK' | 'cHeck' | 'cHecK' | 'cHeCk' | 'cHeCK' | 'cHEck' | 'cHEcK' | 'cHECk' | 'cHECK' | 'Check' | 'ChecK' | 'CheCk' | 'CheCK' | 'ChEck' | 'ChEcK' | 'ChECk' | 'ChECK' | 'CHeck' | 'CHecK' | 'CHeCk' | 'CHeCK' | 'CHEck' | 'CHEcK' | 'CHECk' | 'CHECK';
+
+NULL: 'null'| 'nulL' | 'nuLl'| 'nuLL' | 'nUll' | 'nUlL' | 'nULl' | 'nULL'| 'Null' | 'NulL' | 'NuLl' | 'NuLL' | 'NUll'| 'NUlL' | 'NULl' | 'NULL';
 
 LETTER: [a-zA-Z] | '_';
 

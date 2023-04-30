@@ -197,6 +197,16 @@ public interface SQLListener extends ParseTreeListener {
 	 */
 	void exitDataType(SQLParser.DataTypeContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SQLParser#word}.
+	 * @param ctx the parse tree
+	 */
+	void enterWord(SQLParser.WordContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#word}.
+	 * @param ctx the parse tree
+	 */
+	void exitWord(SQLParser.WordContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SQLParser#columnName}.
 	 * @param ctx the parse tree
 	 */
@@ -276,6 +286,16 @@ public interface SQLListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitString(SQLParser.StringContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SQLParser#dateValue}.
+	 * @param ctx the parse tree
+	 */
+	void enterDateValue(SQLParser.DateValueContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#dateValue}.
+	 * @param ctx the parse tree
+	 */
+	void exitDateValue(SQLParser.DateValueContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SQLParser#date}.
 	 * @param ctx the parse tree
