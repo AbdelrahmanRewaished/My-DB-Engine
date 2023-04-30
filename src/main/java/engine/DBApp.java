@@ -15,6 +15,7 @@ import engine.operations.selection.SelectFromTableParams;
 import engine.operations.selection.Selection;
 import engine.operations.update.Update;
 import engine.operations.update.UpdateTableParams;
+import utilities.PropertiesReader;
 
 import java.util.*;
 
@@ -22,14 +23,13 @@ import java.util.*;
 public class DBApp {
     private static final Set<String> supportedSqlLogicalOperators = new HashSet<>(Arrays.asList("AND", "OR", "XOR"));
     private static final String fileExtension = ".ser";
-    private static final String rootDatabaseFolder =  "resources";
+    private static final String rootDatabaseFolder = PropertiesReader.getProperty("databaseRootFolder");
     private static final String tablesRootFolder = rootDatabaseFolder + "/data/";
+    private static final String metadataFolderLocation = rootDatabaseFolder + "/Metadata";
     private static final String serializedTablesInfoLocation = tablesRootFolder + "serializedTablesInfo" + fileExtension;
+    private static final String csvFileLocation = metadataFolderLocation + "/metadata.csv";
 
-    private static final String csvFileLocation = rootDatabaseFolder + "/metadata.csv";
-    public static String getRootDatabaseFolder() {
-        return rootDatabaseFolder;
-    }
+    public static String getMetadataFolderLocation() {return metadataFolderLocation;}
     public static String getTablesRootFolder() {
         return tablesRootFolder;
     }

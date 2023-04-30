@@ -11,6 +11,7 @@ public class Initialization {
     private Initialization(){}
 
     private static void createMetadataFile() {
+        FileHandler.createFolder(DBApp.getMetadataFolderLocation());
         FileHandler.createFile(DBApp.getCSVFileLocation());
     }
     public static void init() {

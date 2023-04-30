@@ -2,5 +2,5 @@
 target
 MyDBEngine.iml
 gen
-resources/data
-resources/metadata.csv
+src/resources/data
+src/resources/Metadata

@@ -6,7 +6,7 @@ import java.io.Serial;
 import java.io.Serializable;
 
 public class PageMetaInfo implements Serializable {
-    private static final int maxNumberOfRecords = PropertiesReader.getProperty("MaximumRowsCountinTablePage");
+    private static final int maxNumberOfRecords = Integer.parseInt(PropertiesReader.getProperty("MaximumRowsCountinTablePage"));
     private int currentNumberOfRecords;
     private final String location;
     private Comparable minimumContainedKey;
