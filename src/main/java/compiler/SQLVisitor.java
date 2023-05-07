@@ -52,12 +52,6 @@ public interface SQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitColumnList(SQLParser.ColumnListContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SQLParser#tableList}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitTableList(SQLParser.TableListContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link SQLParser#valueList}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -93,18 +87,6 @@ public interface SQLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitEqualityExpression(SQLParser.EqualityExpressionContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SQLParser#tableReference}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitTableReference(SQLParser.TableReferenceContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SQLParser#tableReferencedConditionList}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitTableReferencedConditionList(SQLParser.TableReferencedConditionListContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SQLParser#columnDefinition}.
 	 * @param ctx the parse tree
@@ -171,6 +153,12 @@ public interface SQLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitDouble(SQLParser.DoubleContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#stringWord}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStringWord(SQLParser.StringWordContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SQLParser#string}.
 	 * @param ctx the parse tree

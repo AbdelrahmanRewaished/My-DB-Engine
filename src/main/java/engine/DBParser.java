@@ -24,7 +24,9 @@ import utilities.validation.ParserValidator;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Objects;
 
+@SuppressWarnings("ALL")
 class DBParser {
     private final SQLParser parser;
     private final SQLParser.QueryContext queryContext;
@@ -44,44 +46,44 @@ class DBParser {
         return queryContext.getChild(0).getChild(0).getText();
     }
 
-    private SQLTerm[] createSQLTerms(List<String> tableName, List<String> columns, List<String> operators, List<String> values) {
-        SQLTerm[] sqlTerms = new SQLTerm[columns.size()];
-        for(int i = 0; i < columns.size(); i++) {
-
-        }
-        return sqlTerms;
-    }
     private String getValue(SQLParser.ValueContext valueContext) {
         if(valueContext.date() != null) {
             return valueContext.date().dateValue().getText();
         }
         if(valueContext.string() != null) {
-            return valueContext.string().word().getText();
+            return valueContext.string().stringWord().getText();
         }
         return valueContext.getText();
     }
-    SelectFromTableParams getSelectionParams() {
-        SQLParser.SelectStatementContext selectStatement = queryContext.selectStatement();
-        List<String> tableNames = new ArrayList<>();
-        for(SQLParser.TableNameContext tableNameContext: selectStatement.tableList().tableName()) {
-            tableNames.add(tableNameContext.getText());
+    private SQLTerm[] getSQLTerms(String tableName, List<String> columns, List<String> operators, List<String> values) throws DBAppException {
+        SQLTerm[] sqlTerms = new SQLTerm[columns.size()];
+        for(int i = 0; ! columns.isEmpty(); i++) {
+            String columnName = columns.remove(0);
+            String columnType = Objects.requireNonNull(MetadataReader.getTableColumnMetadataRecord(tableName, columnName)).getColumnType();
+            String operator = operators.remove(0);
+            String value = values.remove(0);
+            Object objectValue = DatabaseTypesHandler.getObject(value, columnType);
+            sqlTerms[i] = new SQLTerm(tableName, columnName, operator, objectValue);
         }
+        return sqlTerms;
+    }
+    SelectFromTableParams getSelectionParams() throws DBAppException {
+        SQLParser.SelectStatementContext selectStatement = queryContext.selectStatement();
+        String tableName = selectStatement.tableName().getText();
         List<String> operators = new ArrayList<>();
         List<String> conditionValues = new ArrayList<>();
         List<String> conditionColumns = new ArrayList<>();
-        List<String> logicalOperators = new ArrayList<>();
         SQLParser.ConditionListContext conditionListContext = selectStatement.conditionList();
-        while(conditionListContext != null) {
-            SQLParser.ConditionExpressionContext expressionContext = conditionListContext.conditionExpression();
+        for(SQLParser.ConditionExpressionContext expressionContext: conditionListContext.conditionExpression()) {
             conditionColumns.add(expressionContext.columnName().getText());
             operators.add(expressionContext.operator().getText());
             conditionValues.add(getValue(expressionContext.value()));
-            if(conditionListContext.logicalOperator(0) != null)
-                logicalOperators.add(conditionListContext.logicalOperator(0).getText());
-            conditionListContext = conditionListContext.conditionList(0);
         }
-        System.out.println(String.format("Tables: %s\nCondition Columns: %s\nOperators: %s\nCondition Values: %s\nLogical Operators: %s", tableNames, conditionColumns, operators, conditionValues, logicalOperators));
-        return null;
+        List<String> logicalOperators = new ArrayList<>();
+        for(SQLParser.LogicalOperatorContext logicalOperatorContext: conditionListContext.logicalOperator()) {
+            logicalOperators.add(logicalOperatorContext.getText());
+        }
+        return new SelectFromTableParams(getSQLTerms(tableName, conditionColumns, operators, conditionValues), logicalOperators.toArray(new String[0]));
     }
 
     private Comparable getConditionExpressionBoundValue(Object value, String operator) {

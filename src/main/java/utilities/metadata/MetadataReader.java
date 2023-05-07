@@ -16,11 +16,11 @@ public class MetadataReader {
     private static List<CSVRecord> records;
     private static boolean isModified;
 
-    public static void setModified() {
+    static void setModified() {
         isModified = true;
     }
 
-    public static synchronized List<CSVRecord> getCSVRecords() throws DBAppException {
+    static synchronized List<CSVRecord> getCSVRecords() throws DBAppException {
         if(records == null || isModified) {
             try {
                 Reader formatReader = Files.newBufferedReader(Paths.get(DBApp.getCSVFileLocation()));

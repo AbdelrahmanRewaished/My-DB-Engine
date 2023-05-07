@@ -47,15 +47,4 @@ public class Record extends Hashtable<String, Object> {
             default -> false;
         };
     }
-
-    public void combineRecords(String tableName, Record h) {
-        for(String columnName: h.keySet()) {
-            if(containsKey(columnName)) {
-                put(String.format("%s_%s", tableName, columnName), h.get(columnName));
-            }
-            else {
-                put(columnName, h.get(columnName));
-            }
-        }
-    }
 }

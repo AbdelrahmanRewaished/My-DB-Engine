@@ -1,11 +1,11 @@
 package engine.operations.selection;
 
 import engine.DBApp;
-import engine.elements.Table;
 import engine.exceptions.DBAppException;
-import utilities.serialization.Deserializer;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 @SuppressWarnings("ALL")
 public class SelectFromTableParams {
@@ -15,6 +15,7 @@ public class SelectFromTableParams {
     public SelectFromTableParams(SQLTerm[] sqlTerms, String[] logicalOperators) throws DBAppException {
         checkIfValidSqlExpression(sqlTerms, logicalOperators);
         checkIfLogicalOperatorsAreValid(logicalOperators);
+        checkIfContainsOnlyOneTable(sqlTerms);
         this.sqlTerms = sqlTerms;
         this.logicalOperators = logicalOperators;
     }
@@ -37,6 +38,14 @@ public class SelectFromTableParams {
             }
         }
     }
+    private void checkIfContainsOnlyOneTable(SQLTerm[] sqlTerms) throws DBAppException {
+        for(int i = 0; i < sqlTerms.length - 1; i++) {
+            String table1 = sqlTerms[i]._strTableName, table2 = sqlTerms[i + 1]._strTableName;
+            if(! table1.equals(table2)) {
+                throw new DBAppException("Select statement cannot have more than one table");
+            }
+        }
+    }
     private void capitalizeWords(String[] words) {
         for(int i = 0; i < words.length; i++) {
             words[i] = words[i].toUpperCase();
@@ -49,23 +58,8 @@ public class SelectFromTableParams {
     public String[] getLogicalOperators() {
         return logicalOperators;
     }
-    Hashtable<String, Table> getTableNameObject() {
-        HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
-        Hashtable<String, Table> tableNameObject = new Hashtable<>();
-        for(SQLTerm term: sqlTerms) {
-            tableNameObject.put(term._strTableName, serializedTablesInfo.get(term._strTableName));
-        }
-        return tableNameObject;
-    }
 
-    List<SQLTerm> getCorrespondingTableSqlTerms(String tableName) {
-        List<SQLTerm> result = new ArrayList<>();
-        for(SQLTerm sqlTerm: sqlTerms) {
-            if(sqlTerm._strTableName.equals(tableName)) {
-                result.add(sqlTerm);
-            }
-        }
-        return result;
+    public String getSelectedTableName() {
+        return sqlTerms[0]._strTableName;
     }
-
 }

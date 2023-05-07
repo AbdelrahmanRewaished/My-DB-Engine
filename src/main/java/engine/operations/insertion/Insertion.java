@@ -13,7 +13,6 @@ import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
 import utilities.validation.InsertionValidator;
 
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
@@ -161,8 +160,7 @@ public class Insertion {
     }
     public synchronized void insertIntoTable() throws DBAppException {
         InsertionValidator.validate(params);
-        HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
-        Table table = serializedTablesInfo.get(tableName);
+        Table table = (Table) Deserializer.deserialize(DBApp.getTableInfoFileLocation(params.getTableName()));
         Object clusteringValue = record.get(table.getClusteringKey());
         int requiredPageInfoIndex = getRequiredPageInfoIndex(table, clusteringValue);
         checkIfPrimaryKeyAlreadyExists(table, clusteringValue, requiredPageInfoIndex);
@@ -177,6 +175,6 @@ public class Insertion {
         else {
             Serializer.serialize(page.getPageInfo().getLocation(), page);
         }
-        Serializer.serialize(DBApp.getSerializedTablesInfoLocation(), serializedTablesInfo);
+        Serializer.serialize(DBApp.getTableInfoFileLocation(params.getTableName()), table);
     }
 }

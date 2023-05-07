@@ -1,8 +1,10 @@
 import engine.DBApp;
 import engine.elements.Page;
 import engine.elements.PageMetaInfo;
+import engine.elements.Record;
 import engine.elements.Table;
 import engine.exceptions.DBAppException;
+import engine.operations.selection.SQLTerm;
 import utilities.serialization.Deserializer;
 
 import java.io.PrintWriter;
@@ -75,12 +77,22 @@ public class Test {
     public static void showAllTableRecords(String tableName) {
         PrintWriter pw = new PrintWriter(System.out);
         pw.println("Table " + tableName + " content: ");
-        HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
-        Table table = serializedTablesInfo.get(tableName);
+        Table table = (Table) Deserializer.deserialize(DBApp.getTableInfoFileLocation(tableName));
         for(PageMetaInfo pageMetaInfo: table.getPagesInfo()) {
             pw.println(Page.deserializePage(pageMetaInfo));
         }
         pw.println();
+        pw.flush();
+    }
+
+    public static void main(String[] args) throws DBAppException {
+        DBApp dbApp = new DBApp();
+        dbApp.init();
+        Iterator iterator = dbApp.parseSQL(new StringBuffer("select * from Employee where id < 12 and id > 5 or name = 'Osama'"));
+        PrintWriter pw = new PrintWriter(System.out);
+        while(iterator.hasNext()) {
+            pw.println(iterator.next());
+        }
         pw.flush();
     }
 }

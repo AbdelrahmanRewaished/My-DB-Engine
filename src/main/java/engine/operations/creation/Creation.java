@@ -5,13 +5,9 @@ import engine.elements.Table;
 import engine.exceptions.DBAppException;
 import utilities.FileHandler;
 import utilities.metadata.MetadataWriter;
-import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
 import utilities.validation.CreationValidator;
 
-import java.util.HashMap;
-
-@SuppressWarnings("unchecked")
 public class Creation{
     private final CreateTableParams createTableParams;
     public Creation(CreateTableParams createTableParams) {
@@ -22,9 +18,7 @@ public class Creation{
         CreationValidator.validate(createTableParams);
         String tableLocation = FileHandler.createFolder(DBApp.getTablesRootFolder() + createTableParams.getTableName());
         Table table = new Table(createTableParams.getTableName(), tableLocation, createTableParams.getClusteringKey());
-        HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
-        serializedTablesInfo.put(createTableParams.getTableName(), table);
-        Serializer.serialize(DBApp.getSerializedTablesInfoLocation(), serializedTablesInfo);
+        Serializer.serialize(DBApp.getTableInfoFileLocation(createTableParams.getTableName()), table);
         MetadataWriter.addTableInfo(createTableParams);
     }
 }

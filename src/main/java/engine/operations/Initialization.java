@@ -20,6 +20,5 @@ public class Initialization {
         }
         createMetadataFile();
         FileHandler.createFolder(DBApp.getTablesRootFolder());
-        Serializer.serialize(DBApp.getSerializedTablesInfoLocation(), new HashMap<>());
     }
 }

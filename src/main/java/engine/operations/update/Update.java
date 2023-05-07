@@ -6,8 +6,6 @@ import engine.exceptions.DBAppException;
 import utilities.serialization.Deserializer;
 import utilities.validation.UpdateValidator;
 
-import java.util.HashMap;
-
 public class Update {
     private final UpdateTableParams params;
 
@@ -16,8 +14,7 @@ public class Update {
     }
     public synchronized int updateTable() throws DBAppException {
         UpdateValidator.validate(params);
-        HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
-        Table table = serializedTablesInfo.get(params.getTableName());
+        Table table = (Table) Deserializer.deserialize(DBApp.getTableInfoFileLocation(params.getTableName()));
         UpdateStrategy strategy;
         if(params.getClusteringKeyValue() == null) {
             strategy = new UpdateAllRecords(params, table);

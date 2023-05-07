@@ -2,7 +2,7 @@ grammar SQL;
 
 query: selectStatement | insertStatement | updateStatement | deleteStatement | createTableStatement ;
 
-selectStatement:  SELECT '*' FROM tableName WHERE conditionList |  SELECT '*' FROM tableList | SELECT '*' FROM tableList WHERE tableReferencedConditionList;
+selectStatement:  SELECT '*' FROM tableName WHERE conditionList |  SELECT '*' FROM tableName;
 
 insertStatement: INSERT INTO tableName '('columnList')' VALUES '('valueList')';
 
@@ -14,11 +14,9 @@ createTableStatement: CREATE TABLE tableName '(' columnDefinition PRIMARYKEY (',
 
 columnList: columnName (',' columnName)* ;
 
-tableList: tableName tableReference (',' tableName tableReference)+ ;
-
 valueList: value (',' value)* ;
 
-conditionList: conditionExpression (logicalOperator conditionList)*;
+conditionList: conditionExpression (logicalOperator conditionExpression)*;
 
 conditionExpression: columnName operator value;
 
@@ -27,10 +25,6 @@ deleteConditionList: equalityExpression (AND deleteConditionList)*;
 updateList: equalityExpression (',' updateList)* ;
 
 equalityExpression: columnName '=' value;
-
-tableReference: string;
-
-tableReferencedConditionList: tableReference '.' columnName operator value (logicalOperator tableReferencedConditionList)*;
 
 columnDefinition: columnName dataType | columnName dataType CHECK '(' columnDefinitionConditionList ')';
 
@@ -46,15 +40,17 @@ tableName: word;
 
 value: integer | string | date | double | NULL;
 
-operator: '=' | '<' | '>' | '<=' | '>=' ;
+operator: '=' | '<' | '>' | '<=' | '>=' | '!=';
 
 logicalOperator: AND | OR | XOR;
 
-integer: (DIGIT)+;
+integer: (DIGIT)+ | '-'(DIGIT)+;
 
-double: (DIGIT)+'.'(DIGIT)+;
+double: (DIGIT)+'.'(DIGIT)+ | '-'(DIGIT)+'.'(DIGIT)+;
 
-string : '\'' word '\'';
+stringWord: (DIGIT | LETTER)+;
+
+string: '\'' stringWord '\'';
 
 dateValue: DIGIT DIGIT DIGIT DIGIT'-'DIGIT DIGIT'-'DIGIT DIGIT;
 

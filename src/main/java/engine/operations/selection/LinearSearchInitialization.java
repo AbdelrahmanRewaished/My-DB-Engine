@@ -1,7 +1,5 @@
 package engine.operations.selection;
 
-import java.util.Hashtable;
-
 public class LinearSearchInitialization implements SelectionInitializationStrategy {
     private final SelectFromTableParams sp;
 
@@ -9,11 +7,7 @@ public class LinearSearchInitialization implements SelectionInitializationStrate
         this.sp = sp;
     }
     @Override
-    public Hashtable<String, SelectIteratorReferences.TableRecordInfo> getInitialTablesDataInfo() {
-        Hashtable<String, SelectIteratorReferences.TableRecordInfo> result = new Hashtable<>();
-        for(SQLTerm term: sp.getSqlTerms()) {
-            result.put(term._strTableName, new SelectIteratorReferences.TableRecordInfo(0, 0));
-        }
-        return result;
+    public TableRecordInfo getInitialTableRecordInfo() {
+        return new TableRecordInfo(0, 0);
     }
 }

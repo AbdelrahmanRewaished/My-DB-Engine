@@ -10,17 +10,13 @@ import java.util.*;
 
 public class LinearSelectionIterator implements Iterator<Record> {
 
-    private final Hashtable<String, Table> tableNameObject;
+    private final Table selectedTable;
     private final SelectFromTableParams sp;
-    private final SelectIteratorReferences references;
-    public LinearSelectionIterator(SelectFromTableParams sp, Hashtable<String, Table> tableNameObject) {
+    private final TableRecordInfo tableRecordInfo;
+    public LinearSelectionIterator(SelectFromTableParams sp, Table selectedTable) {
         this.sp = sp;
-        this.tableNameObject = tableNameObject;
-        references = new SelectIteratorReferences(getInitializationStrategy());
-    }
-
-    private SelectionInitializationStrategy getInitializationStrategy() {
-        return new LinearSearchInitialization(sp);
+        this.selectedTable = selectedTable;
+        tableRecordInfo = new TableRecordInfo(0, 0);
     }
 
     private boolean getConditionResult(boolean firstCondition, String logicalOperator, boolean secondCondition) {
@@ -38,14 +34,14 @@ public class LinearSelectionIterator implements Iterator<Record> {
             default -> -1;
         };
     }
-    private List<Boolean> getSQLTermsEvaluationOfRecord(Record currentRecord, List<SQLTerm> sqlTerms) {
+    private List<Boolean> getSQLTermsEvaluationOfRecord(Record currentRecord, SQLTerm[] sqlTerms) {
         List<Boolean> sqlTermsEvaluations = new ArrayList<>();
         for(SQLTerm term: sqlTerms) {
             sqlTermsEvaluations.add(currentRecord.hasMatchingValues(term));
         }
         return sqlTermsEvaluations;
     }
-    private boolean isMatchingRecord(Record currentRecord, List<SQLTerm> sqlTerms) {
+    private boolean isMatchingRecord(Record currentRecord, SQLTerm[] sqlTerms) {
         List<Boolean> sqlTermsEvaluations = getSQLTermsEvaluationOfRecord(currentRecord, sqlTerms);
         Stack<Boolean> operands = new Stack<>();
         Stack<String> operators = new Stack<>();
@@ -66,13 +62,11 @@ public class LinearSelectionIterator implements Iterator<Record> {
         }
         return operands.pop();
     }
-    private SelectIteratorReferences.TableRecordInfo getNextValidRecordInfo(Table table) {
-        Hashtable<String, SelectIteratorReferences.TableRecordInfo> tablesRecordInfo = references.getCurrentTableDataInfo();
-        SelectIteratorReferences.TableRecordInfo currentTableRecordInfo = tablesRecordInfo.get(table.getName());
-        int currentPageInfoIndex = currentTableRecordInfo.getPageInfoIndex();
-        int currentRecordIndex = currentTableRecordInfo.getRecordIndexInPage();
-        if(currentTableRecordInfo.isInitialized()) {
-            PageMetaInfo currentPageMetaInfo = table.getPagesInfo().get(currentPageInfoIndex);
+    private TableRecordInfo getNextValidRecordInfo() {
+        int currentPageInfoIndex = tableRecordInfo.getPageInfoIndex();
+        int currentRecordIndex = tableRecordInfo.getRecordIndexInPage();
+        if(tableRecordInfo.isInitialized()) {
+            PageMetaInfo currentPageMetaInfo = selectedTable.getPagesInfo().get(currentPageInfoIndex);
             if(currentRecordIndex < currentPageMetaInfo.getCurrentNumberOfRecords()) {
                 currentRecordIndex++;
             }
@@ -81,14 +75,13 @@ public class LinearSelectionIterator implements Iterator<Record> {
                 currentPageInfoIndex++;
             }
         }
-        List<SQLTerm> sqlTermList = sp.getCorrespondingTableSqlTerms(table.getName());
-        while(currentPageInfoIndex < table.getPagesInfo().size()) {
-            PageMetaInfo currentPageMetaInfo = table.getPagesInfo().get(currentPageInfoIndex);
+        while(currentPageInfoIndex < selectedTable.getPagesInfo().size()) {
+            PageMetaInfo currentPageMetaInfo = selectedTable.getPagesInfo().get(currentPageInfoIndex);
             Page currentPage = Page.deserializePage(currentPageMetaInfo);
             while(currentRecordIndex < currentPage.size()) {
                 Record currentRecord = currentPage.get(currentRecordIndex);
-                if(isMatchingRecord(currentRecord, sqlTermList)){
-                    return new SelectIteratorReferences.TableRecordInfo(currentPageInfoIndex, currentRecordIndex);
+                if(isMatchingRecord(currentRecord, sp.getSqlTerms())){
+                    return new TableRecordInfo(currentPageInfoIndex, currentRecordIndex);
                 }
                 currentRecordIndex++;
             }
@@ -101,41 +94,16 @@ public class LinearSelectionIterator implements Iterator<Record> {
 
     @Override
     public boolean hasNext() {
-        int logicalOperatorIndex = 0;
-        Boolean result = null;
-        Hashtable<String, Boolean> tableHavingNextValidRecord = new Hashtable<>();
-        for(SQLTerm term: sp.getSqlTerms()) {
-            String tableName = term._strTableName;
-            if(tableHavingNextValidRecord.containsKey(tableName)) {
-                String logicalOperator = sp.getLogicalOperators()[logicalOperatorIndex++];
-                result = getConditionResult(result, logicalOperator, tableHavingNextValidRecord.get(tableName));
-                continue;
-            }
-            Table table = tableNameObject.get(tableName);
-            if(result == null) {
-                result = getNextValidRecordInfo(table) != null;
-            }
-            else {
-                String logicalOperator = sp.getLogicalOperators()[logicalOperatorIndex++];
-                result = getConditionResult(result, logicalOperator, getNextValidRecordInfo(table) != null);
-            }
-            tableHavingNextValidRecord.put(tableName, result);
-        }
-        return Boolean.TRUE.equals(result);
+        return getNextValidRecordInfo() != null;
     }
     @Override
     public Record next() {
-        Record resultingRecord = new Record();
-        for(String tableName: tableNameObject.keySet()) {
-            Table table = tableNameObject.get(tableName);
-            SelectIteratorReferences.TableRecordInfo nextRecordInfo = getNextValidRecordInfo(table);
-            if(nextRecordInfo == null) {
-                return null;
-            }
-            references.saveNewTableDataInfo(tableName, nextRecordInfo);
-            Page page = Page.deserializePage(table.getPagesInfo().get(nextRecordInfo.getPageInfoIndex()));
-            resultingRecord.combineRecords(tableName, page.get(nextRecordInfo.getRecordIndexInPage()));
+        TableRecordInfo nextRecordInfo = getNextValidRecordInfo();
+        if(nextRecordInfo == null) {
+            return null;
         }
-        return resultingRecord;
+        tableRecordInfo.saveNewState(nextRecordInfo);
+        Page page = Page.deserializePage(selectedTable.getPagesInfo().get(nextRecordInfo.getPageInfoIndex()));
+        return page.get(nextRecordInfo.getRecordIndexInPage());
     }
 }

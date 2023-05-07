@@ -26,15 +26,11 @@ public class DBApp {
     private static final String rootDatabaseFolder = PropertiesReader.getProperty("databaseRootFolder");
     private static final String tablesRootFolder = rootDatabaseFolder + "/data/";
     private static final String metadataFolderLocation = rootDatabaseFolder + "/Metadata";
-    private static final String serializedTablesInfoLocation = tablesRootFolder + "serializedTablesInfo" + fileExtension;
     private static final String csvFileLocation = metadataFolderLocation + "/metadata.csv";
 
     public static String getMetadataFolderLocation() {return metadataFolderLocation;}
     public static String getTablesRootFolder() {
         return tablesRootFolder;
-    }
-    public static String getSerializedTablesInfoLocation() {
-        return serializedTablesInfoLocation;
     }
     public static String getCSVFileLocation() {
         return csvFileLocation;
@@ -42,6 +38,8 @@ public class DBApp {
 
     public static Set<String> getSupportedSqlLogicalOperators() {return supportedSqlLogicalOperators;}
     public static String getFileExtension() {return fileExtension;}
+
+    public static String getTableInfoFileLocation(String tableName) {return tablesRootFolder + tableName + "/info" + fileExtension;}
     // execute at application startup
 
     private void printMessage(String message) {

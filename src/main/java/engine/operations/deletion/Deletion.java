@@ -7,8 +7,6 @@ import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
 import utilities.validation.DeletionValidator;
 
-import java.util.HashMap;
-
 public class Deletion{
     private final DeleteFromTableParams params;
 
@@ -17,8 +15,7 @@ public class Deletion{
     }
     public synchronized int deleteFromTable() throws DBAppException {
         DeletionValidator.validate(params);
-        HashMap<String, Table> serializedTablesInfo = (HashMap<String, Table>) Deserializer.deserialize(DBApp.getSerializedTablesInfoLocation());
-        Table table = serializedTablesInfo.get(params.getTableName());
+        Table table = (Table) Deserializer.deserialize(DBApp.getTableInfoFileLocation(params.getTableName()));
         String clusteringKey = table.getClusteringKey();
         DeletionStrategy strategy;
         if (params.getColNameValue().containsKey(clusteringKey)) {
@@ -28,7 +25,7 @@ public class Deletion{
         }
         int recordsDeleted = strategy.deleteFromTable();
         if (recordsDeleted > 0) {
-            Serializer.serialize(DBApp.getSerializedTablesInfoLocation(), serializedTablesInfo);
+            Serializer.serialize(DBApp.getTableInfoFileLocation(params.getTableName()), table);
         }
         return recordsDeleted;
     }

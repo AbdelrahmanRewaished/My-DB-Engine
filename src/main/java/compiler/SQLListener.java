@@ -77,16 +77,6 @@ public interface SQLListener extends ParseTreeListener {
 	 */
 	void exitColumnList(SQLParser.ColumnListContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link SQLParser#tableList}.
-	 * @param ctx the parse tree
-	 */
-	void enterTableList(SQLParser.TableListContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SQLParser#tableList}.
-	 * @param ctx the parse tree
-	 */
-	void exitTableList(SQLParser.TableListContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link SQLParser#valueList}.
 	 * @param ctx the parse tree
 	 */
@@ -146,26 +136,6 @@ public interface SQLListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitEqualityExpression(SQLParser.EqualityExpressionContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SQLParser#tableReference}.
-	 * @param ctx the parse tree
-	 */
-	void enterTableReference(SQLParser.TableReferenceContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SQLParser#tableReference}.
-	 * @param ctx the parse tree
-	 */
-	void exitTableReference(SQLParser.TableReferenceContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SQLParser#tableReferencedConditionList}.
-	 * @param ctx the parse tree
-	 */
-	void enterTableReferencedConditionList(SQLParser.TableReferencedConditionListContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SQLParser#tableReferencedConditionList}.
-	 * @param ctx the parse tree
-	 */
-	void exitTableReferencedConditionList(SQLParser.TableReferencedConditionListContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SQLParser#columnDefinition}.
 	 * @param ctx the parse tree
@@ -276,6 +246,16 @@ public interface SQLListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitDouble(SQLParser.DoubleContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SQLParser#stringWord}.
+	 * @param ctx the parse tree
+	 */
+	void enterStringWord(SQLParser.StringWordContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#stringWord}.
+	 * @param ctx the parse tree
+	 */
+	void exitStringWord(SQLParser.StringWordContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link SQLParser#string}.
 	 * @param ctx the parse tree
