@@ -12,6 +12,9 @@ public class SelectFromTableParams {
     private final SQLTerm[] sqlTerms;
     private final String[] logicalOperators;
 
+    public boolean isTermConditionExpressionNullable(SQLTerm term) {
+        return term._strColumnName == null && term._strOperator == null && term._objValue == null;
+    }
     public SelectFromTableParams(SQLTerm[] sqlTerms, String[] logicalOperators) throws DBAppException {
         checkIfValidSqlExpression(sqlTerms, logicalOperators);
         checkIfLogicalOperatorsAreValid(logicalOperators);
@@ -23,6 +26,9 @@ public class SelectFromTableParams {
         for(SQLTerm term: sqlTerms) {
             if(! term.isValidSqlTerm()) {
                 throw new DBAppException(String.format("Invalid SQL Term '%s'", term));
+            }
+            if(sqlTerms.length > 1 && isTermConditionExpressionNullable(term)) {
+                throw new DBAppException("Invalid SelectFromTable Statement");
             }
         }
         if(sqlTerms.length - 1 != logicalOperators.length) {

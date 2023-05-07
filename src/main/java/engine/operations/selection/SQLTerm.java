@@ -8,10 +8,9 @@ public class SQLTerm {
     public Object _objValue;
 
     public boolean isValidSqlTerm() {
-        if(_strColumnName == null && _strOperator == null && _objValue == null) {
-            return true;
-        }
-        return _strTableName != null && _strColumnName != null && _strOperator != null && _objValue != null;
+        return _strTableName != null &&
+                (_strColumnName != null && _strOperator != null && _objValue != null ||
+                _strColumnName == null && _strOperator == null && _objValue == null);
     }
     public SQLTerm(String _strTableName, String _strColumnName, String _strOperator, Object _objValue) throws DBAppException {
         this._strTableName = _strTableName;

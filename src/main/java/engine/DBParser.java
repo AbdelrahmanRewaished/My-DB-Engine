@@ -56,6 +56,9 @@ class DBParser {
         return valueContext.getText();
     }
     private SQLTerm[] getSQLTerms(String tableName, List<String> columns, List<String> operators, List<String> values) throws DBAppException {
+        if(columns.isEmpty() && operators.isEmpty() && values.isEmpty()) {
+            return new SQLTerm[]{new SQLTerm(tableName, null, null, null)};
+        }
         SQLTerm[] sqlTerms = new SQLTerm[columns.size()];
         for(int i = 0; ! columns.isEmpty(); i++) {
             String columnName = columns.remove(0);
@@ -74,12 +77,16 @@ class DBParser {
         List<String> conditionValues = new ArrayList<>();
         List<String> conditionColumns = new ArrayList<>();
         SQLParser.ConditionListContext conditionListContext = selectStatement.conditionList();
+        List<String> logicalOperators = new ArrayList<>();
+        if(conditionListContext == null) {
+            return new SelectFromTableParams(getSQLTerms(tableName, conditionColumns, operators, conditionValues), logicalOperators.toArray(new String[0]));
+        }
         for(SQLParser.ConditionExpressionContext expressionContext: conditionListContext.conditionExpression()) {
             conditionColumns.add(expressionContext.columnName().getText());
             operators.add(expressionContext.operator().getText());
             conditionValues.add(getValue(expressionContext.value()));
         }
-        List<String> logicalOperators = new ArrayList<>();
+
         for(SQLParser.LogicalOperatorContext logicalOperatorContext: conditionListContext.logicalOperator()) {
             logicalOperators.add(logicalOperatorContext.getText());
         }

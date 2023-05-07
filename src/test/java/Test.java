@@ -88,7 +88,7 @@ public class Test {
     public static void main(String[] args) throws DBAppException {
         DBApp dbApp = new DBApp();
         dbApp.init();
-        Iterator iterator = dbApp.parseSQL(new StringBuffer("select * from Employee where id < 12 and id > 5 or name = 'Osama'"));
+        Iterator iterator = dbApp.parseSQL(new StringBuffer("select * from Employee"));
         PrintWriter pw = new PrintWriter(System.out);
         while(iterator.hasNext()) {
             pw.println(iterator.next());
