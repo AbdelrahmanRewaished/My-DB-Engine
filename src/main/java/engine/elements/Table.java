@@ -1,7 +1,11 @@
 package engine.elements;
 
+import engine.elements.index.Octree;
+import utilities.validation.IndexCreationValidator;
+
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Vector;
@@ -13,6 +17,7 @@ public class Table implements Serializable {
     private final List<PageMetaInfo> pagesInfo;
     private final String name;
     private final String clusteringKey;
+    private final List<IndexMetaInfo> indicesInfo;
     @Serial
     private static final long serialVersionUID = 123456789L;
     public Table(String name, String folderLocation, String clusteringKey) {
@@ -20,6 +25,7 @@ public class Table implements Serializable {
         this.folderLocation = folderLocation;
         this.clusteringKey = clusteringKey;
         pagesInfo = new Vector<>();
+        indicesInfo = new Vector<>();
     }
 
     public String getFolderLocation() {
@@ -36,6 +42,7 @@ public class Table implements Serializable {
     public void addPageInfo(PageMetaInfo pageMetaInfo) {
         pagesInfo.add(pageMetaInfo);
     }
+    public void addIndexInfo(IndexMetaInfo indexMetaInfo) {indicesInfo.add(indexMetaInfo);}
     public void removePageInfo(int index) {
         pagesInfo.remove(index);
     }
@@ -44,6 +51,9 @@ public class Table implements Serializable {
         return clusteringKey;
     }
 
+    public List<IndexMetaInfo> getIndicesInfo() {
+        return indicesInfo;
+    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -76,10 +86,26 @@ public class Table implements Serializable {
         }
         return -1;
     }
-    public String getMaxPageLocation() {
+    private String getMaxPageLocation() {
         return pagesInfo.get(pagesInfo.size() - 1).getLocation();
     }
-
+    private String getMaxIndexLocation(){return indicesInfo.get(indicesInfo.size() - 1).getIndexFileLocation();}
+    public String getNextPageFileLocation() {
+        if(pagesInfo.isEmpty()) {
+            return "/0" + getFileExtension();
+        }
+        String[] splitter = getMaxPageLocation().split("/");
+        int lastPageNumber = Integer.parseInt(splitter[splitter.length - 1].split(getFileExtension())[0]);
+        return "/" + (lastPageNumber + 1) + getFileExtension();
+    }
+    public String getNextIndexFileLocation() {
+        if(indicesInfo.isEmpty()) {
+            return "/0" + getFileExtension();
+        }
+        String[] splitter = getMaxIndexLocation().split("/");
+        int lastIndexNumber = Integer.parseInt(splitter[splitter.length - 1].split(getFileExtension())[0]);
+        return "/" + (lastIndexNumber + 1) + getFileExtension();
+    }
     @Override
     public String toString() {
         return "Table{" +

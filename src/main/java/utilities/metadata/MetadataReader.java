@@ -1,9 +1,11 @@
 package utilities.metadata;
 
 import engine.DBApp;
+import engine.elements.index.Boundary;
 import engine.exceptions.DBAppException;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
+import utilities.datatypes.DatabaseTypesHandler;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -73,6 +75,16 @@ public class MetadataReader {
             existingTableColumnNames.add(record.getColumnName());
         }
         return existingTableColumnNames;
+    }
+    public static Boundary getTableColumnsBoundaries(String tableName, String[] columnNames) throws DBAppException {
+        Hashtable<String, Comparable> colNameMin = new Hashtable<>(), colNameMax = new Hashtable<>();
+        for(String columnName: columnNames) {
+            MetadataRecord record1 = getTableColumnMetadataRecord(tableName, columnName);
+            colNameMin.put(columnName, DatabaseTypesHandler.getObject(record1.getMinValue(), record1.getColumnType()));
+            colNameMax.put(columnName, DatabaseTypesHandler.getObject(record1.getMaxValue(), record1.getColumnType()));
+
+        }
+        return new Boundary(colNameMin, colNameMax);
     }
     public static String getClusteringKey(String tableName) throws DBAppException {
         for(MetadataRecord record: getTableMetadataRecords(tableName)) {

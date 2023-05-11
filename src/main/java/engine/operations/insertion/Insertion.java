@@ -103,16 +103,9 @@ public class Insertion {
         return currentIndex;
     }
 
-    private String getNextPageFileLocation(Table table) {
-        if(table.getPagesInfo().isEmpty()) {
-            return "/0" + getFileExtension();
-        }
-        String[] splitter = table.getMaxPageLocation().split("/");
-        int lastPageNumber = Integer.parseInt(splitter[splitter.length - 1].split(getFileExtension())[0]);
-        return "/" + (lastPageNumber + 1) + getFileExtension();
-    }
+
     private Page getNewPage(Table table) {
-        PageMetaInfo pageMetaInfo = new PageMetaInfo(table.getFolderLocation() + getNextPageFileLocation(table));
+        PageMetaInfo pageMetaInfo = new PageMetaInfo(table.getFolderLocation() + table.getNextPageFileLocation());
         return new Page(pageMetaInfo);
     }
 
@@ -132,16 +125,17 @@ public class Insertion {
     }
     private void adjustTablePages(Table table, int nextPageIndex, Page currentPage) {
         List<PageMetaInfo> pagesInfo = table.getPagesInfo();
-        boolean isOutOfBound = true;
-        while(nextPageIndex < pagesInfo.size() && isOutOfBound) {
+        boolean isPageOverFlown = true;
+        while(nextPageIndex < pagesInfo.size() && isPageOverFlown) {
             Record nextRecord = currentPage.removeRecord(currentPage.size() - 1, table.getClusteringKey());
             Serializer.serialize(currentPage.getPageInfo().getLocation(), currentPage);
             PageMetaInfo nextPageMetaInfo = pagesInfo.get(nextPageIndex);
             currentPage = Page.deserializePage(nextPageMetaInfo);
-            isOutOfBound = ! currentPage.addRecord(0, table.getClusteringKey(), nextRecord);
+            currentPage.addRecord(0, table.getClusteringKey(), nextRecord);
+            isPageOverFlown = currentPage.getPageInfo().isOverFlown();
             nextPageIndex++;
         }
-        if(isOutOfBound) {
+        if(isPageOverFlown) {
             Record nextRecord = currentPage.removeRecord(currentPage.size() - 1, table.getClusteringKey());
             Serializer.serialize(currentPage.getPageInfo().getLocation(), currentPage);
             currentPage = getNewPage(table);
@@ -168,8 +162,8 @@ public class Insertion {
         int requiredRecordIndex = getRequiredRecordIndex(page, table.getClusteringKey(), clusteringValue);
         checkIfPrimaryKeyAlreadyExists(table, clusteringValue, requiredRecordIndex);
         adjustInsertedRecord(tableName, record);
-        boolean isOverFullPage = ! page.addRecord(requiredRecordIndex, table.getClusteringKey(), record);
-        if(isOverFullPage) {
+        page.addRecord(requiredRecordIndex, table.getClusteringKey(), record);
+        if(page.getPageInfo().isOverFlown()) {
             adjustTablePages(table, requiredPageInfoIndex + 1, page);
         }
         else {

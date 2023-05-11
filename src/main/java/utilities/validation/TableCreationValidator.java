@@ -12,8 +12,8 @@ import utilities.metadata.MetadataReader;
 import java.util.Hashtable;
 import java.util.Set;
 
-public class CreationValidator {
-    private CreationValidator(){}
+public class TableCreationValidator {
+    private TableCreationValidator(){}
 
     private static boolean isClusteringKeyExistingInColumns(String clusteringKey, Hashtable<String, String> columns) {
         return columns.containsKey(clusteringKey);

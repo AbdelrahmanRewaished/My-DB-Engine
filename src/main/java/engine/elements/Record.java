@@ -1,8 +1,11 @@
 package engine.elements;
 
 
+import engine.DBApp;
 import engine.operations.selection.SQLTerm;
+import engine.operations.selection.TableRecordInfo;
 import utilities.datatypes.Null;
+import utilities.serialization.Deserializer;
 
 import java.io.Serial;
 import java.util.*;
@@ -46,5 +49,9 @@ public class Record extends Hashtable<String, Object> {
             case "!=" -> ! get(term._strColumnName).equals(term._objValue);
             default -> false;
         };
+    }
+    public static Record getRecord(Table table, TableRecordInfo recordInfo) {
+        Page page = Page.deserializePage(table.getPagesInfo().get(recordInfo.getPageInfoIndex()));
+        return page.get(recordInfo.getRecordIndexInPage());
     }
 }

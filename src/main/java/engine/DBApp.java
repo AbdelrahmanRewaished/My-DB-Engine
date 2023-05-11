@@ -4,7 +4,7 @@ import engine.elements.Record;
 import engine.exceptions.DBAppException;
 import engine.operations.Initialization;
 import engine.operations.creation.CreateTableParams;
-import engine.operations.creation.Creation;
+import engine.operations.creation.TableCreation;
 import engine.operations.deletion.DeleteFromTableParams;
 import engine.operations.deletion.Deletion;
 import engine.operations.dropping.Dropping;
@@ -38,7 +38,9 @@ public class DBApp {
 
     public static Set<String> getSupportedSqlLogicalOperators() {return supportedSqlLogicalOperators;}
     public static String getFileExtension() {return fileExtension;}
-
+    public static String getIndexFolderLocationOfTable(String tableName) {
+        return tablesRootFolder + tableName + "/indices/";
+    }
     public static String getTableInfoFileLocation(String tableName) {return tablesRootFolder + tableName + "/info" + fileExtension;}
     // execute at application startup
 
@@ -69,7 +71,7 @@ public class DBApp {
             throws DBAppException
     {
         CreateTableParams createTableParams = new CreateTableParams(strTableName, strClusteringKeyColumn, htblColNameType, htblColNameMin, htblColNameMax);
-        new Creation(createTableParams).createTable();
+        new TableCreation(createTableParams).createTable();
         printMessage(String.format("Table '%s' created Successfully .", strTableName));
     }
 

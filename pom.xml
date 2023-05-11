@@ -39,12 +39,6 @@
             </plugin>
         </plugins>
     </build>
-    <repositories>
-        <repository>
-            <id>Ryandw11</id>
-            <url>https://repo.ryandw11.com/repository/maven-releases/</url>
-        </repository>
-    </repositories>
     <dependencies>
         <dependency>
             <groupId>com.opencsv</groupId>
@@ -60,11 +54,6 @@
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
             <version>4.12.0</version>
-        </dependency>
-        <dependency>
-            <groupId>me.ryandw11</groupId>
-            <artifactId>Octree</artifactId>
-            <version>1.0</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

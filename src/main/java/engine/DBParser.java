@@ -3,6 +3,7 @@ package engine;
 import compiler.SQLLexer;
 import compiler.SQLParser;
 import engine.elements.Record;
+import engine.exceptions.ColumnDoesNotExistException;
 import engine.exceptions.DBAppException;
 import engine.exceptions.InvalidTypeException;
 import engine.exceptions.TableDoesNotExistException;
@@ -60,8 +61,14 @@ class DBParser {
             return new SQLTerm[]{new SQLTerm(tableName, null, null, null)};
         }
         SQLTerm[] sqlTerms = new SQLTerm[columns.size()];
+        if(MetadataReader.search(tableName) == -1) {
+            throw new TableDoesNotExistException(tableName);
+        }
         for(int i = 0; ! columns.isEmpty(); i++) {
             String columnName = columns.remove(0);
+            if(MetadataReader.getTableColumnMetadataRecord(tableName, columnName) == null) {
+                throw new ColumnDoesNotExistException(tableName, columnName);
+            }
             String columnType = Objects.requireNonNull(MetadataReader.getTableColumnMetadataRecord(tableName, columnName)).getColumnType();
             String operator = operators.remove(0);
             String value = values.remove(0);

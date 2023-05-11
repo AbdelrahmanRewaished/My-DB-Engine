@@ -3,6 +3,7 @@ package engine.operations.selection;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Objects;
 
 public class TableRecordInfo {
     private int pageInfoIndex;
@@ -33,4 +34,16 @@ public class TableRecordInfo {
         initialized = true;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TableRecordInfo)) return false;
+        TableRecordInfo that = (TableRecordInfo) o;
+        return getPageInfoIndex() == that.getPageInfoIndex() && getRecordIndexInPage() == that.getRecordIndexInPage();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getPageInfoIndex(), getRecordIndexInPage());
+    }
 }

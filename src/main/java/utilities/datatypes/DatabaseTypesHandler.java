@@ -39,7 +39,7 @@ public class DatabaseTypesHandler {
 
     public static String getSqlVarcharType() {return sqlVARCHARType;}
 
-    private static Date getDate(String date) {
+    public static Date getDate(String date) {
         try {
             return new SimpleDateFormat("yyyy-MM-dd").parse(date);
         } catch (ParseException e) {
@@ -143,7 +143,7 @@ public class DatabaseTypesHandler {
         Date max = new Date(Long.MAX_VALUE);
         return getDateFormat(max);
     }
-    private static String getDateFormat(Date date) {
+    public static String getDateFormat(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         return formatter.format(date);
     }
@@ -228,6 +228,50 @@ public class DatabaseTypesHandler {
             case stringType -> {
                 return addStringValue((String)value, addedValue);
             }
+        }
+        return null;
+    }
+    private static String getMiddleStringValue(String str1, String str2) {
+        int minLength = Math.min(str1.length(), str2.length());
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < minLength; i++) {
+            char firstChar = str1.charAt(i);
+            char secondChar = str2.charAt(i);
+            int asciiAverage = (int) ((firstChar + secondChar) / 2);
+            char middleChar = (char) asciiAverage;
+            sb.append(middleChar);
+        }
+        if (str1.length() > str2.length()) {
+            sb.append(str1.substring(minLength));
+        } else if (str2.length() > str1.length()) {
+            sb.append(str2.substring(minLength));
+        }
+        return sb.toString();
+    }
+    private static Date getMiddleDateValue(Date date1, Date date2) {
+        long timestamp1 = date1.getTime();
+        long timestamp2 = date2.getTime();
+        long avgTimestamp = (timestamp1 + timestamp2) / 2;
+        return new Date(avgTimestamp);
+    }
+    private static int getMiddleIntegerValue(int i1, int i2) {
+        return (i1 + i2) / 2;
+    }
+    private static double getMiddleDoubleValue(double d1, double d2) {
+        return (d1 + d2) / 2;
+    }
+    public static Comparable getMiddleValue(Object obj1, Object obj2) {
+        if(obj1 instanceof String) {
+            return getMiddleStringValue((String)obj1, (String)obj2);
+        }
+        if(obj1 instanceof Date) {
+            return getMiddleDateValue((Date)obj1, (Date)obj2);
+        }
+        if(obj1 instanceof Integer) {
+            return getMiddleIntegerValue((Integer)obj1, (Integer)obj2);
+        }
+        if(obj1 instanceof Double) {
+            return getMiddleDoubleValue((Double)obj1, (Double)obj2);
         }
         return null;
     }

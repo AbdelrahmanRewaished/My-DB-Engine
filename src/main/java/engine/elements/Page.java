@@ -28,12 +28,10 @@ public class Page extends Vector<Record> {
         pageMetaInfo.setMinimumContainedKey((Comparable) get(0).get(clusteringKey));
         pageMetaInfo.setMaximumContainedKey((Comparable) get(size() - 1).get(clusteringKey));
     }
-    public boolean addRecord(int index, String clusteringKey, Record record) {
-        boolean isFull = pageMetaInfo.isFull();
+    public void addRecord(int index, String clusteringKey, Record record) {
         add(index, record);
         adjustCurrentMinAndMaxClusteringValue(clusteringKey);
         pageMetaInfo.incrementCurrentNumberOfRecords();
-        return ! isFull;
     }
     public Record removeRecord(int index, String clusteringKey) {
         Record removed = remove(index);

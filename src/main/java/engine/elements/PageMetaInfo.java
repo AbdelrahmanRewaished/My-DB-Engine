@@ -54,10 +54,12 @@ public class PageMetaInfo implements Serializable {
     public void setMaximumContainedKey(Comparable maximumContainedKey) {
         this.maximumContainedKey = maximumContainedKey;
     }
+    public boolean isOverFlown() {
+        return currentNumberOfRecords > maxNumberOfRecords;
+    }
     public boolean isFull() {
         return currentNumberOfRecords == maxNumberOfRecords;
     }
-
     @Override
     public String toString() {
         return "PageInfo{" +
@@ -65,7 +67,7 @@ public class PageMetaInfo implements Serializable {
                 ", location='" + location + '\'' +
                 ", minimumContainedKey=" + minimumContainedKey +
                 ", maximumContainedKey=" + maximumContainedKey +
-                ", isFull=" + isFull() +
+                ", isOverFlown=" + isOverFlown() +
                 '}';
     }
 }
