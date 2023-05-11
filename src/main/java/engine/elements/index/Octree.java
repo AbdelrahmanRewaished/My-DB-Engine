@@ -1,12 +1,9 @@
 package engine.elements.index;
 
 
-import engine.DBApp;
-import engine.elements.IndexMetaInfo;
 import engine.elements.Record;
 import engine.elements.Table;
 import engine.operations.selection.TableRecordInfo;
-import org.apache.commons.lang3.ArrayUtils;
 import utilities.serialization.Deserializer;
 
 import java.io.Serializable;

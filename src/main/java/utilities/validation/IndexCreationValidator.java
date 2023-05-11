@@ -1,6 +1,6 @@
 package utilities.validation;
 
-import engine.elements.IndexMetaInfo;
+import engine.elements.index.IndexMetaInfo;
 import engine.elements.Table;
 import engine.exceptions.ColumnAlreadyIndexedException;
 import engine.exceptions.ColumnDoesNotExistException;

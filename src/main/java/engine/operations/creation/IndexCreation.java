@@ -1,7 +1,7 @@
 package engine.operations.creation;
 
 import engine.DBApp;
-import engine.elements.IndexMetaInfo;
+import engine.elements.index.IndexMetaInfo;
 import engine.elements.Page;
 import engine.elements.Table;
 import engine.elements.index.Octree;

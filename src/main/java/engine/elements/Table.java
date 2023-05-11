@@ -1,11 +1,9 @@
 package engine.elements;
 
-import engine.elements.index.Octree;
-import utilities.validation.IndexCreationValidator;
+import engine.elements.index.IndexMetaInfo;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Vector;

@@ -1,4 +1,4 @@
-package engine.elements;
+package engine.elements.index;
 
 public class IndexMetaInfo {
     private final String name;
