@@ -104,6 +104,9 @@ public class Table implements Serializable {
         int lastIndexNumber = Integer.parseInt(splitter[splitter.length - 1].split(getFileExtension())[0]);
         return "/" + (lastIndexNumber + 1) + getFileExtension();
     }
+    public boolean isHavingIndices() {
+        return ! indicesInfo.isEmpty();
+    }
     @Override
     public String toString() {
         return "Table{" +

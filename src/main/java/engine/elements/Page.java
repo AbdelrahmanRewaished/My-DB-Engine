@@ -41,13 +41,6 @@ public class Page extends Vector<Record> {
         }
         return removed;
     }
-    public void updateRecord(int index, Record colNameNewValue) {
-        Record requiredRecord = get(index);
-        for(String columnName: colNameNewValue.keySet()) {
-            Object newValue = colNameNewValue.get(columnName);
-            requiredRecord.put(columnName, newValue);
-        }
-    }
     public int findRecordIndex(String clusteringKey, Comparable keyValue) {
         int left = 0, right = size() - 1;
         while(left <= right) {

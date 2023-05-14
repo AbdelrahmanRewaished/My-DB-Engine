@@ -9,7 +9,7 @@ import utilities.serialization.Serializer;
 
 public class DeleteAllMatchingRecords implements DeletionStrategy{
     private DeleteFromTableParams dp;
-    private Table table;
+    Table table;
 
     public DeleteAllMatchingRecords(DeleteFromTableParams dp, Table table) {
         this.dp = dp;

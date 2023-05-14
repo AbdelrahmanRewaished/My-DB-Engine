@@ -1,14 +1,16 @@
 package engine.operations.creation;
 
 import engine.DBApp;
-import engine.elements.index.IndexMetaInfo;
 import engine.elements.Page;
+import engine.elements.PageMetaInfo;
+import engine.elements.Record;
 import engine.elements.Table;
+import engine.elements.index.IndexMetaInfo;
 import engine.elements.index.Octree;
 import engine.exceptions.DBAppException;
-import engine.operations.selection.TableRecordInfo;
 import utilities.FileHandler;
 import utilities.metadata.MetadataReader;
+import utilities.metadata.MetadataWriter;
 import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
 import utilities.validation.IndexCreationValidator;
@@ -20,11 +22,11 @@ public class IndexCreation {
        this.params = params;
     }
 
-    private void fillIndexWithTableRecords(Table table, Octree index) {
-        for(int i = 0 ; i < table.getPagesInfo().size(); i++) {
-            Page page = Page.deserializePage(table.getPagesInfo().get(i));
-            for(int j = 0; j < page.size(); j++) {
-                index.insert(table, new TableRecordInfo(i, j));
+    private void fillIndexWithTableRecords(Table table, Octree index) throws DBAppException {
+        for(PageMetaInfo pageMetaInfo: table.getPagesInfo()) {
+            Page page = Page.deserializePage(pageMetaInfo);
+            for (Record record : page) {
+                index.insert(table, record);
             }
         }
     }
@@ -41,9 +43,11 @@ public class IndexCreation {
         Table table = (Table) Deserializer.deserialize(DBApp.getTableInfoFileLocation(params.getTableName()));
         IndexCreationValidator.validateIndexedColumnsExistence(table, params.getIndexedColumns());
         String tableIndicesFolderLocation = DBApp.getIndexFolderLocationOfTable(table.getName());
-        IndexMetaInfo indexMetaInfo = new IndexMetaInfo(params.getTableName(), params.getIndexedColumns(), tableIndicesFolderLocation + table.getNextIndexFileLocation());
+        IndexMetaInfo indexMetaInfo = new IndexMetaInfo(params.getIndexName(), params.getIndexedColumns(), tableIndicesFolderLocation + table.getNextIndexFileLocation());
         Octree index = new Octree(indexMetaInfo, MetadataReader.getTableColumnsBoundaries(params.getTableName(), params.getIndexedColumns()));
+        MetadataWriter.setColumnsToBeIndexed(params);
         fillIndexWithTableRecords(table, index);
         storeNewTableIndex(table, index);
+
     }
 }

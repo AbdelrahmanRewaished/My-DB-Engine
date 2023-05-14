@@ -1,13 +1,11 @@
 package engine.operations.insertion;
 
 import engine.DBApp;
-import engine.elements.Page;
-import engine.elements.PageMetaInfo;
+import engine.elements.*;
 import engine.elements.Record;
-import engine.elements.Table;
 import engine.exceptions.DBAppException;
 import engine.exceptions.insertion_exceptions.PrimaryKeyAlreadyExistsException;
-import utilities.datatypes.Null;
+import utilities.datatypes.DBAppNull;
 import utilities.metadata.MetadataReader;
 import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
@@ -17,13 +15,12 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
-import static engine.DBApp.getFileExtension;
-
 @SuppressWarnings("ALL")
 public class Insertion {
-    private final InsertIntoTableParams params;
+    final InsertIntoTableParams params;
     private final String tableName;
     private final Record record;
+    Table table;
     public Insertion(InsertIntoTableParams params) {
         this.params = params;
         tableName = params.getTableName();
@@ -148,13 +145,13 @@ public class Insertion {
         Set<String> columnNames = MetadataReader.getTableColumnNames(tableName);
         for(String columnName: columnNames) {
             if(! record.containsKey(columnName)) {
-                record.put(columnName, new Null());
+                record.put(columnName, new DBAppNull());
             }
         }
     }
     public synchronized void insertIntoTable() throws DBAppException {
         InsertionValidator.validate(params);
-        Table table = (Table) Deserializer.deserialize(DBApp.getTableInfoFileLocation(params.getTableName()));
+        table = (Table) Deserializer.deserialize(DBApp.getTableInfoFileLocation(params.getTableName()));
         Object clusteringValue = record.get(table.getClusteringKey());
         int requiredPageInfoIndex = getRequiredPageInfoIndex(table, clusteringValue);
         checkIfPrimaryKeyAlreadyExists(table, clusteringValue, requiredPageInfoIndex);

@@ -1,6 +1,9 @@
 package engine.elements.index;
 
-public class IndexMetaInfo {
+import java.io.Serializable;
+import java.util.Hashtable;
+
+public class IndexMetaInfo implements Serializable {
     private final String name;
     private final String[] indexedColumnNames;
     private final String indexFileLocation;
@@ -30,5 +33,16 @@ public class IndexMetaInfo {
             }
         }
         return false;
+    }
+    public boolean isContainingIndexedColumns(Hashtable<String, Object> colNameValue) {
+        for(String columnName: colNameValue.keySet()){
+            if(isContainingIndexColumn(columnName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public static String getType() {
+        return "Octree";
     }
 }

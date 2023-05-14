@@ -1,7 +1,9 @@
 package utilities.metadata;
 
 import engine.DBApp;
+import engine.elements.index.IndexMetaInfo;
 import engine.exceptions.DBAppException;
+import engine.operations.creation.CreateIndexParams;
 import engine.operations.creation.CreateTableParams;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -9,7 +11,7 @@ import org.apache.commons.csv.CSVRecord;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 public class MetadataWriter {
     private MetadataWriter() {}
@@ -18,6 +20,7 @@ public class MetadataWriter {
         try {
             FileWriter fileWriter = new FileWriter(DBApp.getCSVFileLocation(), true);
             appender = new CSVPrinter(fileWriter, CSVFormat.DEFAULT);
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -53,14 +56,42 @@ public class MetadataWriter {
             throw new RuntimeException(e);
         }
     }
-    public static synchronized void deleteTableInfo(int tableInfoIndex, String tableName) throws DBAppException {
+
+    public static synchronized void setColumnsToBeIndexed(CreateIndexParams params) throws DBAppException {
+        addTableInfoWithIndexedColumns(deleteTableInfo(MetadataReader.search(params.getTableName()), params.getTableName()), params);
+    }
+    public static synchronized void addTableInfoWithIndexedColumns(List<CSVRecord> csvRecords, CreateIndexParams params) {
+        Set<String> columnNamesToBeIndexed = new HashSet<>(Arrays.asList(params.getIndexedColumns()));
+        CSVPrinter appender = getAppender();
+        for(CSVRecord record: csvRecords) {
+            MetadataRecord currentRecord = new MetadataRecord(record);
+            if(columnNamesToBeIndexed.contains(currentRecord.getColumnName())) {
+                currentRecord.setIndexType(IndexMetaInfo.getType());
+                currentRecord.setIndexName(params.getIndexName());
+            }
+            try {
+                appender.printRecord(currentRecord.getTableName(), currentRecord.getColumnName(), currentRecord.getColumnType(), currentRecord.isClusteringKey(), currentRecord.getIndexName(), currentRecord.getIndexType(), currentRecord.getMinValue(), currentRecord.getMaxValue());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        try {
+            appender.flush();
+            appender.close();
+            MetadataReader.setModified();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static synchronized List<CSVRecord> deleteTableInfo(int tableInfoIndex, String tableName) throws DBAppException {
         List<CSVRecord> records = MetadataReader.getCSVRecords();
+        List<CSVRecord> deletedRecords = new Vector<>();
         while(! records.isEmpty() && tableInfoIndex < records.size()) {
             MetadataRecord currentRecord = new MetadataRecord(records.get(tableInfoIndex));
             if(! currentRecord.getTableName().equals(tableName)) {
                 break;
             }
-            records.remove(tableInfoIndex);
+            deletedRecords.add(records.remove(tableInfoIndex));
         }
         try {
             CSVPrinter printer = getPrinter();
@@ -71,5 +102,6 @@ public class MetadataWriter {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return deletedRecords;
     }
 }

@@ -85,8 +85,8 @@ public class DatabaseTypesHandler {
         return stringType;
     }
     public static Comparable getObject(String object, String objectType) {
-        if(object.toLowerCase().equals(Null.getValue())) {
-            return new Null();
+        if(object.toLowerCase().equals(DBAppNull.getValue())) {
+            return new DBAppNull();
         }
         if(objectType.equals(stringType)) {
             return object;
@@ -103,13 +103,13 @@ public class DatabaseTypesHandler {
         return object;
     }
     public static boolean isCompatibleTypes(String type, String value) {
-        if(value.toLowerCase().equals(Null.getValue())) {
+        if(value.toLowerCase().equals(DBAppNull.getValue())) {
             return true;
         }
         return type.equals(stringType) || type.equals(doubleType) && getType(value).equals(integerType) || type.equals(getType(value));
     }
     public static boolean isCompatibleTypes(String type, Object value) {
-        return value instanceof Null || type.equals(value.getClass().getName());
+        return value instanceof DBAppNull || type.equals(value.getClass().getName());
     }
     private static String getIdIntegerMinValue() {
         return "0";

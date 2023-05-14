@@ -1,5 +1,7 @@
 package engine.operations.selection;
 
+import engine.elements.TableRecordInfo;
+
 public class BinarySearchInitialization implements SelectionInitializationStrategy {
 
     private final SelectFromTableParams sp;

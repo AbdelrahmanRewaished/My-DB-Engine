@@ -18,10 +18,20 @@ public class Deletion{
         Table table = (Table) Deserializer.deserialize(DBApp.getTableInfoFileLocation(params.getTableName()));
         String clusteringKey = table.getClusteringKey();
         DeletionStrategy strategy;
-        if (params.getColNameValue().containsKey(clusteringKey)) {
-            strategy = new DeleteRecordOnClusteringKey(params, table);
-        } else {
-            strategy = new DeleteAllMatchingRecords(params, table);
+        if(table.isHavingIndices()) {
+            if(params.getColNameValue().isEmpty()) {
+                strategy = new DeleteAllRecordsWithIndex(params, table);
+            }
+            else {
+                strategy = new DeleteRecordsOnValuesWithIndex(params, table);
+            }
+        }
+        else {
+            if (params.getColNameValue().containsKey(clusteringKey)) {
+                strategy = new DeleteRecordOnClusteringKey(params, table);
+            } else {
+                strategy = new DeleteAllMatchingRecords(params, table);
+            }
         }
         int recordsDeleted = strategy.deleteFromTable();
         if (recordsDeleted > 0) {

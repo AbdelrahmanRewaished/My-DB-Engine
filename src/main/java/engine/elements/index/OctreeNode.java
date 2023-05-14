@@ -1,10 +1,11 @@
 package engine.elements.index;
 
-import engine.DBApp;
 import engine.elements.Page;
+import engine.elements.PageMetaInfo;
 import engine.elements.Record;
 import engine.elements.Table;
-import engine.operations.selection.TableRecordInfo;
+import engine.exceptions.DBAppException;
+import utilities.FileHandler;
 import utilities.PropertiesReader;
 import utilities.datatypes.DatabaseTypesHandler;
 import utilities.serialization.Serializer;
@@ -20,7 +21,7 @@ class OctreeNode implements Serializable {
 
     private final Boundary boundary;
 
-    private List<TableRecordInfo> entries;
+    private List<IndexRecordsInfo> entries;
 
     private final OctreeNode[] children;
 
@@ -30,7 +31,7 @@ class OctreeNode implements Serializable {
         this.children = new OctreeNode[8];
     }
 
-    List<TableRecordInfo> getEntries() {
+    List<IndexRecordsInfo> getEntries() {
         return entries;
     }
 
@@ -54,21 +55,33 @@ class OctreeNode implements Serializable {
         return entries.size() > maxEntriesPerNode;
     }
     boolean isUnderFlown() {
-        int total= 0;
-        for(OctreeNode node: children) {
-            total += node.getEntries().size();
-        }
-        return total <= maxEntriesPerNode;
+       for(OctreeNode child: children) {
+           if(! child.getEntries().isEmpty()) {
+               return false;
+           }
+       }
+       return true;
     }
     boolean isHavingLeafChildren() {
         for(OctreeNode child: children) {
-            if(! child.isALeaf()) {
+            if(child != null && ! child.isALeaf()) {
                 return false;
             }
         }
         return true;
     }
-    void addEntry(TableRecordInfo entry) {
+    void addRecord(Table table, Record record) {
+        for(IndexRecordsInfo entry: entries) {
+           if(entry.contains(table, record)) {
+               entry.add(record);
+               return;
+           }
+        }
+        IndexRecordsInfo recordsInfo = new IndexRecordsInfo();
+        recordsInfo.add(record);
+        entries.add(recordsInfo);
+    }
+    void addEntry(IndexRecordsInfo entry) {
         entries.add(entry);
     }
 
@@ -79,10 +92,11 @@ class OctreeNode implements Serializable {
             Comparable columnMinValue = boundary.getLowBound().get(columnName);
             Comparable columnMaxValue = boundary.getHighBound().get(columnName);
             BoundRange range = boundRanges.get(i);
-            switch(range) {
-                case min: colNameBound.put(columnName, columnMinValue); break;
-                case middle: colNameBound.put(columnName, DatabaseTypesHandler.getMiddleValue(columnMinValue, columnMaxValue)); break;
-                case max: colNameBound.put(columnName, columnMaxValue);
+            switch (range) {
+                case min -> colNameBound.put(columnName, columnMinValue);
+                case middle ->
+                        colNameBound.put(columnName, DatabaseTypesHandler.getMiddleValue(columnMinValue, columnMaxValue));
+                case max -> colNameBound.put(columnName, columnMaxValue);
             }
         }
         return colNameBound;
@@ -108,67 +122,75 @@ class OctreeNode implements Serializable {
         children[topSouthEast.getPosition()] = new OctreeNode(new Boundary(getBound(indexedColumnNames, Arrays.asList(BoundRange.min, BoundRange.middle, BoundRange.middle))
                 , getBound(indexedColumnNames, Arrays.asList(BoundRange.middle, BoundRange.max, BoundRange.max))));
 
-        children[topNorthWest.getPosition()] = new OctreeNode(new Boundary(getBound(indexedColumnNames, Arrays.asList(BoundRange.middle, BoundRange.middle, BoundRange.min))
-                , getBound(indexedColumnNames, Arrays.asList(BoundRange.max, BoundRange.max, BoundRange.middle))));
+        children[topNorthWest.getPosition()] = new OctreeNode(new Boundary(getBound(indexedColumnNames, Arrays.asList(BoundRange.middle, BoundRange.min, BoundRange.middle))
+                , getBound(indexedColumnNames, Arrays.asList(BoundRange.max, BoundRange.middle, BoundRange.max))));
 
         children[topNorthEast.getPosition()]  = new OctreeNode(new Boundary(getBound(indexedColumnNames, Arrays.asList(BoundRange.middle, BoundRange.middle, BoundRange.middle))
                 , getBound(indexedColumnNames, Arrays.asList(BoundRange.max, BoundRange.max, BoundRange.max))));
     }
-
-    void distributeDataInChildren(Table tableContainingIndex) {
-        for(TableRecordInfo entry: entries) {
-            Record record = Record.getRecord(tableContainingIndex, entry);
-            for(OctreeNode child: children) {
-                if(child.getBoundary().isRecordInBounds(record)) {
-                    child.addEntry(entry);
-                    if(child.isOverFlown()) {
-                        child.distributeDataInChildren(tableContainingIndex);
+    void distributeDataInChildren(Table tableContainingIndex) throws DBAppException {
+        Stack<OctreeNode> stack = new Stack<>();
+        stack.push(this);
+        while (!stack.isEmpty()) {
+            OctreeNode node = stack.pop();
+            for (IndexRecordsInfo entry : node.entries) {
+                Record record = entry.getMaxValuesRecord(tableContainingIndex);
+                for (OctreeNode child : node.children) {
+                    if (child.getBoundary().isRecordInBounds(record)) {
+                        child.addEntry(entry);
+                        if (child.isOverFlown()) {
+                            child.initializeChildren();
+                            stack.push(child);
+                        }
+                        break;
                     }
-                    break;
                 }
             }
+            node.entries = null;
         }
-        entries = null;
     }
-    List<TableRecordInfo> deleteMatchingEntries(Table tableContainingIndex, Hashtable<String, Object> recordToDelete) {
-        List<TableRecordInfo> deletedRecordsInfo = new ArrayList<>();
-        Hashtable<Integer, List<Integer>> groupedRecordsReferences = getSameGroupedRecordsReferences();
-        for(int pageInfoIndex: groupedRecordsReferences.keySet()) {
-            Page page = Page.deserializePage(tableContainingIndex.getPagesInfo().get(pageInfoIndex));
-            for(int recordIndexInPage: groupedRecordsReferences.get(pageInfoIndex)) {
-                Record record = page.get(recordIndexInPage);
-                if(record.hasMatchingValues(recordToDelete)) {
-                    page.removeRecord(recordIndexInPage, tableContainingIndex.getClusteringKey());
-                    TableRecordInfo deletedRecordInfo = new TableRecordInfo(pageInfoIndex, recordIndexInPage);
-                    entries.remove(deletedRecordInfo);
-                    deletedRecordsInfo.add(deletedRecordInfo);
-                }
-            }
+    private void deleteTableRecords(Table tableContainingIndex, Record record) {
+        Comparable clusteringKeyValue = (Comparable) record.get(tableContainingIndex.getClusteringKey());
+        int requiredPageInfoIndex = tableContainingIndex.findPageIndexToLookIn(clusteringKeyValue);
+        PageMetaInfo pageMetaInfo = tableContainingIndex.getPagesInfo().get(requiredPageInfoIndex);
+        Page page = Page.deserializePage(pageMetaInfo);
+        int requiredRecordIndexInPage = page.findRecordIndex(tableContainingIndex.getClusteringKey(), clusteringKeyValue);
+        page.removeRecord(requiredRecordIndexInPage, tableContainingIndex.getClusteringKey());
+        if(! page.isEmpty()) {
             Serializer.serialize(page.getPageInfo().getLocation(), page);
         }
-        return deletedRecordsInfo;
+        else {
+            tableContainingIndex.removePageInfo(requiredPageInfoIndex);
+            FileHandler.deleteFile(pageMetaInfo.getLocation());
+        }
     }
-    private Hashtable<Integer, List<Integer>> getSameGroupedRecordsReferences() {
-        Hashtable<Integer, List<Integer>> groupedPageReferences = new Hashtable<>();
-        for(TableRecordInfo recordInfo: entries) {
-            int pageInfoIndex = recordInfo.getPageInfoIndex(), recordIndexInPage = recordInfo.getRecordIndexInPage();
-            if(groupedPageReferences.containsKey(pageInfoIndex)) {
-                groupedPageReferences.get(pageInfoIndex).add(recordIndexInPage);
+    List<Record> deleteMatchingEntries(Table tableContainingIndex, Hashtable<String, Object> recordToDelete, boolean toDeleteTableRecords) {
+        List<Record> deletedRecords = new ArrayList<>();
+        for(int i = 0; i < entries.size(); ) {
+            IndexRecordsInfo entry = entries.get(i);
+            for(int j = 0; j < entry.size(); ) {
+                Record record = entry.get(j);
+                if(! record.hasMatchingValues(recordToDelete)) {
+                    j++;
+                    continue;
+                }
+                deletedRecords.add(entry.remove(j));
+                if(toDeleteTableRecords) {
+                    deleteTableRecords(tableContainingIndex, record);
+                }
+            }
+            if(entry.isEmpty()) {
+                entries.remove(i);
             }
             else {
-                groupedPageReferences.put(pageInfoIndex, new ArrayList<>());
+                i++;
             }
         }
-        return groupedPageReferences;
+        return deletedRecords;
     }
     void nullifyChildren() {
+        entries = new ArrayList<>(maxEntriesPerNode);
         Arrays.fill(children, null);
-    }
-    void distributeDataFromChildren() {
-        entries = new Vector<>(maxEntriesPerNode);
-        for(OctreeNode child: children) {
-            entries.addAll(child.entries);
-        }
     }
     @Override
     public String toString() {

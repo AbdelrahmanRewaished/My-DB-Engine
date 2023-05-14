@@ -5,12 +5,16 @@ import org.apache.commons.csv.CSVRecord;
 import java.util.List;
 
 public class MetadataRecord {
-    private String tableName;
-    private String maxValue, minValue;
-    private String columnName, columnType;
-    private boolean isClusteringKey;
+    private final String tableName;
+    private final String maxValue;
+    private final String minValue;
+    private final String columnName;
+    private final String columnType;
+    private final boolean isClusteringKey;
     private String indexName;
     private String indexType;
+
+    private CSVRecord record;
     public MetadataRecord(CSVRecord record) {
         tableName = record.get(0);
         columnName = record.get(1);
@@ -20,6 +24,11 @@ public class MetadataRecord {
         indexType = record.get(5);
         minValue = record.get(6);
         maxValue = record.get(7);
+        this.record = record;
+    }
+
+    public CSVRecord getRecord() {
+        return record;
     }
 
     public String getTableName() {
@@ -32,6 +41,13 @@ public class MetadataRecord {
 
     public String getIndexType() {
         return indexType;
+    }
+
+    public void setIndexName(String indexName) {
+        this.indexName = indexName;
+    }
+    public void setIndexType(String indexType) {
+        this.indexType = indexType;
     }
 
     public String getMaxValue() {
@@ -50,13 +66,6 @@ public class MetadataRecord {
         return columnType;
     }
 
-    public void setIndexName(String indexName) {
-        this.indexName = indexName;
-    }
-
-    public void setIndexType(String indexType) {
-        this.indexType = indexType;
-    }
     public boolean isClusteringKey() {
         return isClusteringKey;
     }

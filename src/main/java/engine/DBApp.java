@@ -3,18 +3,22 @@ package engine;
 import engine.elements.Record;
 import engine.exceptions.DBAppException;
 import engine.operations.Initialization;
+import engine.operations.creation.CreateIndexParams;
 import engine.operations.creation.CreateTableParams;
+import engine.operations.creation.IndexCreation;
 import engine.operations.creation.TableCreation;
 import engine.operations.deletion.DeleteFromTableParams;
 import engine.operations.deletion.Deletion;
 import engine.operations.dropping.Dropping;
 import engine.operations.insertion.InsertIntoTableParams;
 import engine.operations.insertion.Insertion;
+import engine.operations.insertion.InsertionWithIndex;
 import engine.operations.selection.SQLTerm;
 import engine.operations.selection.SelectFromTableParams;
 import engine.operations.selection.Selection;
 import engine.operations.update.Update;
 import engine.operations.update.UpdateTableParams;
+import engine.operations.update.UpdateWithIndex;
 import utilities.PropertiesReader;
 
 import java.util.*;
@@ -94,7 +98,7 @@ public class DBApp {
                                 Hashtable<String,Object> htblColNameValue)
             throws DBAppException
     {
-        new Insertion(new InsertIntoTableParams(strTableName, new Record(htblColNameValue))).insertIntoTable();
+        new InsertionWithIndex(new InsertIntoTableParams(strTableName, new Record(htblColNameValue))).insertIntoTable();
         printMessage("1 Row Affected");
     }
 
@@ -108,7 +112,7 @@ public class DBApp {
                             Hashtable<String,Object> htblColNameValue )
             throws DBAppException
     {
-        int recordsUpdated = new Update(new UpdateTableParams(strTableName, strClusteringKeyValue, new Record(htblColNameValue))).updateTable();
+        int recordsUpdated = new UpdateWithIndex(new UpdateTableParams(strTableName, strClusteringKeyValue, new Record(htblColNameValue))).updateTable();
         printMessage(String.format("%d Row(s) Affected", recordsUpdated));
     }
 
@@ -129,6 +133,10 @@ public class DBApp {
             throws DBAppException
     {
         return new Selection(new SelectFromTableParams(arrSQLTerms, strarrOperators)).select();
+    }
+    public void createIndex(String indexName, String tableName, String[] columnNamesToBeIndexed) throws DBAppException {
+        new IndexCreation(new CreateIndexParams(tableName, indexName, columnNamesToBeIndexed)).createIndex();
+        printMessage(String.format("Index '%s' is created successfully in Table '%s' on columns '%s'", indexName, tableName, Arrays.toString(columnNamesToBeIndexed)));
     }
 
     public Iterator parseSQL( StringBuffer strbufSQL ) throws

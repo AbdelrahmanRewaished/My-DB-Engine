@@ -2,7 +2,7 @@ package utilities.datatypes;
 
 import java.io.Serializable;
 
-public class Null implements Serializable, Comparable {
+public class DBAppNull implements Serializable, Comparable {
 
     @Override
     public boolean equals(Object obj) {

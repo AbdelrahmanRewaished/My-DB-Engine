@@ -1,11 +1,9 @@
-package engine.operations.selection;
+package engine.elements;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
+import java.io.Serializable;
 import java.util.Objects;
 
-public class TableRecordInfo {
+public class TableRecordInfo implements Serializable {
     private int pageInfoIndex;
     private int recordIndexInPage;
 
@@ -45,5 +43,13 @@ public class TableRecordInfo {
     @Override
     public int hashCode() {
         return Objects.hash(getPageInfoIndex(), getRecordIndexInPage());
+    }
+
+    @Override
+    public String toString() {
+        return "TableRecordInfo{" +
+                "pageInfoIndex=" + pageInfoIndex +
+                ", recordIndexInPage=" + recordIndexInPage +
+                '}';
     }
 }

@@ -4,6 +4,7 @@ import engine.DBApp;
 import engine.elements.index.Boundary;
 import engine.exceptions.DBAppException;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import utilities.datatypes.DatabaseTypesHandler;
 
@@ -16,6 +17,7 @@ import java.util.*;
 public class MetadataReader {
     private MetadataReader() {}
     private static List<CSVRecord> records;
+    private static CSVParser parser;
     private static boolean isModified;
 
     static void setModified() {
@@ -26,6 +28,7 @@ public class MetadataReader {
         if(records == null || isModified) {
             try {
                 Reader formatReader = Files.newBufferedReader(Paths.get(DBApp.getCSVFileLocation()));
+                parser = new CSVParser(formatReader, CSVFormat.DEFAULT);
                 records = CSVFormat.DEFAULT.parse(formatReader).getRecords();
                 formatReader.close();
                 isModified = false;
@@ -35,6 +38,18 @@ public class MetadataReader {
             }
         }
         return records;
+    }
+    static CSVParser getParser() {
+        if(parser == null) {
+            Reader formatReader;
+            try {
+                formatReader = Files.newBufferedReader(Paths.get(DBApp.getCSVFileLocation()));
+                parser = new CSVParser(formatReader, CSVFormat.DEFAULT);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return parser;
     }
 
     public static int search(String tableName) throws DBAppException {

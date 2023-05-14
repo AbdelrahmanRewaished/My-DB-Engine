@@ -2,6 +2,7 @@ package engine.operations.update;
 
 import engine.elements.Page;
 import engine.elements.PageMetaInfo;
+import engine.elements.Record;
 import engine.elements.Table;
 import utilities.serialization.Serializer;
 
@@ -21,7 +22,8 @@ public class UpdateAllRecords implements UpdateStrategy{
         for(PageMetaInfo pageMetaInfo : table.getPagesInfo()) {
             Page currentPage = Page.deserializePage(pageMetaInfo);
             for(int i = 0; i < currentPage.size(); i++) {
-                currentPage.updateRecord(i, up.getColNameValue());
+                Record record = currentPage.get(i);
+                record.updateValues(up.getColNameValue());
             }
             totalRecordsUpdated += currentPage.size();
             Serializer.serialize(pageMetaInfo.getLocation(), currentPage);

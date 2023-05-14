@@ -1,11 +1,8 @@
 package engine.elements;
 
 
-import engine.DBApp;
 import engine.operations.selection.SQLTerm;
-import engine.operations.selection.TableRecordInfo;
-import utilities.datatypes.Null;
-import utilities.serialization.Deserializer;
+import utilities.datatypes.DBAppNull;
 
 import java.io.Serial;
 import java.util.*;
@@ -20,8 +17,19 @@ public class Record extends Hashtable<String, Object> {
 
     public Record() {
     }
+    public boolean hasMatchingNonNullValues(String clusteringKey, Hashtable<String, Object> colNameValue) {
+        for(String columnName: colNameValue.keySet()) {
+            if(colNameValue.get(columnName) instanceof DBAppNull || this.get(columnName) instanceof DBAppNull || columnName.equals(clusteringKey)) {
+                continue;
+            }
+            if(! colNameValue.get(columnName).equals(this.get(columnName))) {
+                return false;
+            }
+        }
+        return true;
+    }
     public boolean hasMatchingValues(Hashtable<String, Object> colNameValue) {
-        if(colNameValue == null) {
+        if(colNameValue == null || colNameValue.isEmpty()) {
             return true;
         }
         for(String columnName: colNameValue.keySet()) {
@@ -36,7 +44,7 @@ public class Record extends Hashtable<String, Object> {
         if(term._strColumnName == null && term._strOperator == null && term._objValue == null) {
             return true;
         }
-        if(term._objValue instanceof Null) {
+        if(term._objValue instanceof DBAppNull) {
             return false;
         }
         assert term._strOperator != null;
@@ -50,8 +58,19 @@ public class Record extends Hashtable<String, Object> {
             default -> false;
         };
     }
-    public static Record getRecord(Table table, TableRecordInfo recordInfo) {
-        Page page = Page.deserializePage(table.getPagesInfo().get(recordInfo.getPageInfoIndex()));
-        return page.get(recordInfo.getRecordIndexInPage());
+    public int countNonNullValues() {
+        int count = 0;
+        for(String columnName: this.keySet()) {
+            if(! (this.get(columnName) instanceof DBAppNull)) {
+                count++;
+            }
+        }
+        return count;
+    }
+    public void updateValues(Hashtable<String, Object> colNameNewValue) {
+        for(String columnName: colNameNewValue.keySet()) {
+            Object newValue = colNameNewValue.get(columnName);
+            this.put(columnName, newValue);
+        }
     }
 }

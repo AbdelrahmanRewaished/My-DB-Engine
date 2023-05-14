@@ -1,9 +1,7 @@
 package engine.operations.selection;
 
-import engine.elements.Page;
-import engine.elements.PageMetaInfo;
+import engine.elements.*;
 import engine.elements.Record;
-import engine.elements.Table;
 
 import java.util.*;
 

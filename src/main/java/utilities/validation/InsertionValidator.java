@@ -5,7 +5,7 @@ import engine.exceptions.DBAppException;
 import engine.exceptions.TableDoesNotExistException;
 import engine.exceptions.insertion_exceptions.PrimaryKeyCannotBeNull;
 import engine.operations.insertion.InsertIntoTableParams;
-import utilities.datatypes.Null;
+import utilities.datatypes.DBAppNull;
 import utilities.metadata.MetadataReader;
 
 import static utilities.validation.CommonValidator.checkIfValuesInRange;
@@ -16,7 +16,7 @@ public class InsertionValidator {
     private InsertionValidator(){}
     private static void checkIfPrimaryKeyIsInserted(String tableName, Record record) throws DBAppException {
         String tableClusteringKey = MetadataReader.getClusteringKey(tableName);
-        if(! record.containsKey(tableClusteringKey) || record.get(tableClusteringKey) instanceof Null) {
+        if(! record.containsKey(tableClusteringKey) || record.get(tableClusteringKey) instanceof DBAppNull) {
             throw new PrimaryKeyCannotBeNull(tableName, tableClusteringKey);
         }
     }
