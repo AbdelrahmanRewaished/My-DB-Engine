@@ -7,10 +7,7 @@ import engine.elements.index.IndexMetaInfo;
 import engine.exceptions.DBAppException;
 import utilities.serialization.Deserializer;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Set;
+import java.util.*;
 
 @SuppressWarnings("ALL")
 public class SelectFromTableParams {
@@ -83,7 +80,8 @@ public class SelectFromTableParams {
     }
 
 
-    IndexMetaInfo getIndexSearchedValues(Table table) {
+    Set<IndexMetaInfo> getIndexSearchedValues(Table table) {
+        Set<IndexMetaInfo> selectedIndexes = new HashSet<>();
         Hashtable<String, Object> colNameValue = new Hashtable<>();
         int i;
         int maxSize = 0;
@@ -94,28 +92,55 @@ public class SelectFromTableParams {
             IndexMetaInfo indexMetaInfo = getCorrespondingTermIndex(table, term);
             IndexMetaInfo nextIndexMetaInfo = getCorrespondingTermIndex(table, nextTerm);
             if(indexMetaInfo == null || nextIndexMetaInfo == null) {
+                if(indexMetaInfo != null) {
+                    selectedIndexes.add(indexMetaInfo);
+                }
                 continue;
             }
             if(indexMetaInfo.equals(nextIndexMetaInfo)) {
                 colNameValue.put(term._strColumnName, term._objValue);
                 colNameValue.put(nextTerm._strColumnName, nextTerm._objValue);
             }
-            else if(maxSize < colNameValue.size()){
-                maxSize = colNameValue.size();
-                maxColumnsContainedIndex = indexMetaInfo;
-                colNameValue = new Hashtable<String, Object>();
+            else if(maxSize <= colNameValue.size()){
+                if(logicalOperators[i].equals("AND")) {
+                    maxSize = colNameValue.size();
+                    maxColumnsContainedIndex = indexMetaInfo;
+                    colNameValue = new Hashtable<String, Object>();
+                }
+                else {
+                    maxColumnsContainedIndex = maxColumnsContainedIndex == null? indexMetaInfo: maxColumnsContainedIndex;
+                    selectedIndexes.add(maxColumnsContainedIndex);
+                    selectedIndexes.add(nextIndexMetaInfo);
+                    maxSize = 0;
+                    maxColumnsContainedIndex = null;
+                }
             }
         }
         SQLTerm term = sqlTerms[i];
+        if(maxColumnsContainedIndex != null) {
+            if(maxSize >= colNameValue.size()) {
+                selectedIndexes.add(maxColumnsContainedIndex);
+            }
+            else {
+                selectedIndexes.add(getCorrespondingTermIndex(table, term));
+            }
+            if(logicalOperators[i - 1].equals("AND")) {
+                return selectedIndexes;
+            }
+        }
         IndexMetaInfo indexMetaInfo = getCorrespondingTermIndex(table, term);
         if(indexMetaInfo != null) {
             colNameValue.put(term._strColumnName, term._objValue);
-            if(maxSize < colNameValue.size()) {
+            if(maxColumnsContainedIndex != null && maxSize < colNameValue.size()) {
                 maxSize = colNameValue.size();
                 maxColumnsContainedIndex = indexMetaInfo;
+                selectedIndexes.add(maxColumnsContainedIndex);
+            }
+            else {
+                selectedIndexes.add(indexMetaInfo);
             }
         }
-        return maxColumnsContainedIndex;
+        return selectedIndexes;
     }
 
     boolean isQueryCompatibleWithIndexing(Table table) {
@@ -183,16 +208,5 @@ public class SelectFromTableParams {
             }
         }
         return null;
-    }
-
-    public static void main(String[] args) throws DBAppException {
-        DBApp dbApp = new DBApp();
-//        dbApp.parseSQL(new StringBuffer("create INDEX xyzIndex on Test(a, b, c)"));
-//        dbApp.parseSQL(new StringBuffer("create INDEX xyzIndex on Test(d, e, f)"));
-
-//        dbApp.parseSQL(new StringBuffer("create table Test (id int primary key, a int, b int, c int, d int, e int, f int, g int)"));
-        Table table = (Table) Deserializer.deserialize(DBApp.getTableInfoFileLocation("Test"));
-        DBParser parser = new DBParser("select * from Test where d = 1 xor a = 2 or b = 3");
-        System.out.println(parser.getSelectionParams().isQueryCompatibleWithIndexing(table));
     }
 }

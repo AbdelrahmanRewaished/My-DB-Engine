@@ -153,7 +153,7 @@ public class Test {
 //        Iterator<Record> iterator = dbApp.parseSQL(new StringBuffer("select * from Employee where salary <= 10000"));
         PrintWriter pw = new PrintWriter(System.out);
 //
-        Iterator<Record> iterator = dbApp.parseSQL(new StringBuffer("select * from Employee"));
+        Iterator<Record> iterator = dbApp.parseSQL(new StringBuffer("select * from Employee where birth_time < '2025-01-01' and salary = 10000 and name < 'hydie'"));
         while(iterator.hasNext()) {
             Record next = iterator.next();
             pw.println(next);

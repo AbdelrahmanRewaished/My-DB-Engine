@@ -5,23 +5,33 @@ import engine.elements.Table;
 import engine.elements.index.IndexMetaInfo;
 import engine.elements.index.Octree;
 
-import java.util.Iterator;
+import java.util.*;
 
 public class IndexSelectionIterator implements Iterator<Record> {
-    private final Iterator<Record> selectedRecordsIterator;
+    private List<Iterator<Record>> selectedRecordsIterators;
+    private int currentIteratorIndex;
 
     public IndexSelectionIterator(SelectFromTableParams sp, Table selectedTable) {
-        IndexMetaInfo indexSearchedValues = sp.getIndexSearchedValues(selectedTable);
-        selectedRecordsIterator = Octree.deserializeIndex(indexSearchedValues).getMatchingRecordsIterator(selectedTable, sp);
+        selectedRecordsIterators = new Vector<>();
+        for(IndexMetaInfo indexMetaInfo: sp.getIndexSearchedValues(selectedTable)) {
+            selectedRecordsIterators.add(Octree.deserializeIndex(indexMetaInfo).getMatchingRecordsIterator(selectedTable, sp));
+        }
+        currentIteratorIndex = 0;
     }
 
     @Override
     public boolean hasNext() {
-        return selectedRecordsIterator.hasNext();
+        while(currentIteratorIndex < selectedRecordsIterators.size() && ! selectedRecordsIterators.get(currentIteratorIndex).hasNext()) {
+            currentIteratorIndex++;
+        }
+        if(currentIteratorIndex == selectedRecordsIterators.size()) {
+            return false;
+        }
+        return true;
     }
 
     @Override
     public Record next() {
-        return selectedRecordsIterator.next();
+        return selectedRecordsIterators.get(currentIteratorIndex).next();
     }
 }
