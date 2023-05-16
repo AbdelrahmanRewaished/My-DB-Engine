@@ -217,8 +217,10 @@ public class SelectFromTableParams {
     }
 
     public static void main(String[] args) throws DBAppException {
+        DBApp dbApp = new DBApp();
+        dbApp.parseSQL(new StringBuffer("create table Test (id int primary key, a int, b int, c int, d int, e int, f int, g int)"));
         Table table = (Table) Deserializer.deserialize(DBApp.getTableInfoFileLocation("Test"));
         DBParser parser = new DBParser("select * from Test where id = 0 or d = 1 and a = 2 and b = 3");
-        System.out.println(parser.getSelectionParams().getIndexSearchedValues(table));
+        System.out.println(parser.getSelectionParams().isQueryCompatibleWithIndexing(table));
     }
 }

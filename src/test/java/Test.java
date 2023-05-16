@@ -151,13 +151,14 @@ public class Test {
 
 
 //        Iterator<Record> iterator = dbApp.parseSQL(new StringBuffer("select * from Employee where salary <= 10000"));
-//        PrintWriter pw = new PrintWriter(System.out);
-//        while(iterator.hasNext()) {
-//            Record next = iterator.next();
-//            pw.println(next);
-//        }
-//        pw.flush();
-        dbApp.parseSQL(new StringBuffer("create INDEX XYZIndex2 on Employee (name, salary, birth_time)"));
+        PrintWriter pw = new PrintWriter(System.out);
+//
+        Iterator<Record> iterator = dbApp.parseSQL(new StringBuffer("select * from Employee"));
+        while(iterator.hasNext()) {
+            Record next = iterator.next();
+            pw.println(next);
+        }
+        pw.flush();
     }
 
     private static void printOctrees() {
