@@ -125,7 +125,7 @@ public class SelectFromTableParams {
         if(! isContainingIndexedColumns(table)) {
             return false;
         }
-        if(! areAllIndexedColumnsOfTheSameIndexAnded(table)) {
+        if(areTwoIndexesXored(table)) {
             return false;
         }
         if(! areAllNonIndexedColumnsAnded(table)) {
@@ -151,46 +151,15 @@ public class SelectFromTableParams {
         }
         return false;
     }
-    private boolean areAllIndexedColumnsOfTheSameIndexAnded(Table table) {
-        Hashtable<IndexMetaInfo, Set<String>> indexColumnsQueried = new Hashtable<>();
-        IndexMetaInfo indexMetaInfo = null;
+    private boolean areTwoIndexesXored(Table table) {
         for(int i = 0; i < sqlTerms.length - 1; i++) {
             SQLTerm term = sqlTerms[i];
             SQLTerm otherTerm = sqlTerms[i + 1];
-            indexMetaInfo = getCorrespondingTermIndex(table, term);
-            IndexMetaInfo otherIndexMetaInfo = getCorrespondingTermIndex(table, otherTerm);
-            if(indexMetaInfo == null || otherIndexMetaInfo == null || ! indexMetaInfo.equals(otherIndexMetaInfo)) {
-                if(indexMetaInfo != null) {
-                    if (! indexColumnsQueried.containsKey(indexMetaInfo) || indexColumnsQueried.get(indexMetaInfo).size() < indexMetaInfo.getIndexedColumns().length - 1) {
-                        return false;
-                    }
-                    indexColumnsQueried.remove(indexMetaInfo);
-                }
-                indexMetaInfo = null;
-                if(logicalOperators[i].equals("AND")) {
-                    continue;
-                }
-                else {
-                    return false;
-                }
-            }
-            if(! logicalOperators[i].equals("AND")) {
-                return false;
-            }
-            if(! indexColumnsQueried.containsKey(indexMetaInfo)) {
-                indexColumnsQueried.put(indexMetaInfo, new HashSet<>());
-            }
-            Set<String> columnsCovered = indexColumnsQueried.get(indexMetaInfo);
-            columnsCovered.add(term._strColumnName);
-            columnsCovered.add(otherTerm._strColumnName);
-            indexColumnsQueried.put(indexMetaInfo, columnsCovered);
-        }
-        if(indexMetaInfo != null) {
-            if(!indexColumnsQueried.containsKey(indexMetaInfo) || indexColumnsQueried.get(indexMetaInfo).size() < indexMetaInfo.getIndexedColumns().length - 1) {
-                return false;
+            if(logicalOperators[i].equals("XOR")) {
+                return true;
             }
         }
-        return true;
+        return false;
     }
     private boolean areAllNonIndexedColumnsAnded(Table table) {
         for(int i = 0; i < sqlTerms.length - 1; i++) {
@@ -218,9 +187,12 @@ public class SelectFromTableParams {
 
     public static void main(String[] args) throws DBAppException {
         DBApp dbApp = new DBApp();
-        dbApp.parseSQL(new StringBuffer("create table Test (id int primary key, a int, b int, c int, d int, e int, f int, g int)"));
+//        dbApp.parseSQL(new StringBuffer("create INDEX xyzIndex on Test(a, b, c)"));
+//        dbApp.parseSQL(new StringBuffer("create INDEX xyzIndex on Test(d, e, f)"));
+
+//        dbApp.parseSQL(new StringBuffer("create table Test (id int primary key, a int, b int, c int, d int, e int, f int, g int)"));
         Table table = (Table) Deserializer.deserialize(DBApp.getTableInfoFileLocation("Test"));
-        DBParser parser = new DBParser("select * from Test where id = 0 or d = 1 and a = 2 and b = 3");
+        DBParser parser = new DBParser("select * from Test where d = 1 xor a = 2 or b = 3");
         System.out.println(parser.getSelectionParams().isQueryCompatibleWithIndexing(table));
     }
 }
