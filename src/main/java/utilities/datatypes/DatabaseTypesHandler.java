@@ -137,9 +137,9 @@ public class DatabaseTypesHandler {
         StringBuilder sb1 = new StringBuilder();
         while(maxLength-- > 0) {
             sb.append(Character.MAX_VALUE);
-            sb.append('z');
+            sb1.append('z');
         }
-        return sb1.toString();
+        return sb.toString().compareTo(sb1.toString()) < 0? sb1.toString(): sb.toString();
     }
     private static String getMaximumDateValue() {
         Date max = new Date(Long.MAX_VALUE);
