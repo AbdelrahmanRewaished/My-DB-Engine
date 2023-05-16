@@ -91,7 +91,7 @@ public class DBApp {
     }
     private void createIndex(String tableName, String indexName, String[] columnsToIndex) throws DBAppException {
         new IndexCreation(new CreateIndexParams(tableName, indexName, columnsToIndex)).createIndex();
-        printMessage(String.format("Index '%s' is created successfully in Table '%s' on column '%s'", indexName, tableName, columnsToIndex));
+        printMessage(String.format("Index '%s' is created successfully in Table '%s' on column '%s'", indexName, tableName, Arrays.toString(columnsToIndex)));
     }
 
 
