@@ -7,11 +7,11 @@ public class TableRecordInfo implements Serializable {
     private int pageInfoIndex;
     private int recordIndexInPage;
 
-    private boolean initialized;
+    private Page currentPage;
+
     public TableRecordInfo(int currentPageInfoIndex, int currentRecordIndex) {
         this.pageInfoIndex = currentPageInfoIndex;
         this.recordIndexInPage = currentRecordIndex;
-        this.initialized = false;
     }
 
     public int getPageInfoIndex() {
@@ -22,14 +22,18 @@ public class TableRecordInfo implements Serializable {
         return recordIndexInPage;
     }
 
-    public boolean isInitialized() {
-        return initialized;
-    }
 
     public void saveNewState(TableRecordInfo tableRecordInfo) {
         pageInfoIndex = tableRecordInfo.getPageInfoIndex();
         recordIndexInPage = tableRecordInfo.getRecordIndexInPage();
-        initialized = true;
+    }
+
+    public Page getCurrentPage() {
+        return currentPage;
+    }
+
+    public void setCurrentPage(Page currentPage) {
+        this.currentPage = currentPage;
     }
 
     @Override

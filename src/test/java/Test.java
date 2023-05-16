@@ -1,5 +1,6 @@
 import engine.DBApp;
 import engine.elements.*;
+import engine.elements.Record;
 import engine.elements.index.IndexMetaInfo;
 import engine.elements.index.Octree;
 import engine.exceptions.DBAppException;
@@ -116,26 +117,55 @@ public class Test {
 //        octree.insert(new TableRecordInfo(new TableRecordInfo(0 ,0), record));
         DBApp dbApp = new DBApp();
         dbApp.init();
-//
-        dbApp.parseSQL(new StringBuffer("create table Employee (id int check(id > -1) primary key, name varchar(20), salary float check(salary >= 1000), birth_time Date)"));
-        dbApp.createIndex("index1", "Employee", new String[]{"name", "salary", "birth_time"});
-        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary) values (1, 'abdo', 12000)"));
-        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (2, 'hossam', 15000, '1999-12-31')"));
-        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (3, 'ibrahim', 16000, '1680-01-01')"));
-        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, birth_time) values (4, 'emad', '2003-05-10')"));
-        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (5, 'haytham', 13000, '2003-06-20')"));
-        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary) values (6, 'emad', 10000 )"));
-        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (7, 'emad', 10000, '2003-05-10')"));
-        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (8, 'emad', 10000, '2003-05-10')"));
-        dbApp.parseSQL(new StringBuffer("insert into Employee (id, salary, birth_time) values (9, 10000, '2003-05-10')"));
-        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (10, 'emad', 10000, '2003-05-10')"));
-        dbApp.parseSQL(new StringBuffer("insert into Employee (id, salary, birth_time) values (11, 10000, '2003-05-10')"));
-        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary) values (12, 'emad', 10000)"));
-        dbApp.parseSQL(new StringBuffer("update Employee set salary = 20000"));
+
+//        dbApp.parseSQL(new StringBuffer("create table Employee (id int check(id > -1 and id < 101) primary key, name varchar(20), salary float check(salary >= 1000 and salary < 1000001), birth_time Date check(birth_time > '1900-01-01' and birth_time < '2025-12-31'))"));
+//        dbApp.createIndex("index1", "Employee", new String[]{"name", "salary", "birth_time"});
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary) values (1, 'abdo', 12000)"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (2, 'hossam', 15000, '1999-12-31')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (3, 'ibrahim', 16000, '1980-01-01')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, birth_time) values (4, 'emad', '2003-05-10')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (5, 'haytham', 13000, '2003-06-20')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary) values (6, 'emad', 10000 )"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (7, 'emad', 10000, '2003-05-10')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (8, 'emad', 10000, '2003-05-10')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, salary, birth_time) values (9, 10000, '2003-05-10')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (10, 'emad', 10000, '2003-05-10')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, salary, birth_time) values (11, 10000, '2003-05-10')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary) values (12, 'emad', 10000)"));
+//        dbApp.parseSQL(new StringBuffer("update Employee set salary = 20000 where id = 12"));
+//        dbApp.parseSQL(new StringBuffer("delete from Employee"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary) values (1, 'abdo', 12000)"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (2, 'hossam', 15000, '1999-12-31')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (3, 'ibrahim', 16000, '1980-01-01')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, birth_time) values (4, 'emad', '2003-05-10')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (5, 'haytham', 13000, '2003-06-20')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary) values (6, 'emad', 10000 )"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (7, 'emad', 10000, '2003-05-10')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (8, 'emad', 10000, '2003-05-10')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, salary, birth_time) values (9, 10000, '2003-05-10')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary, birth_time) values (10, 'emad', 10000, '2003-05-10')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, salary, birth_time) values (11, 10000, '2003-05-10')"));
+//        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary) values (12, 'emad', 10000)"));
+
+
+
+
+//        Iterator<Record> iterator = dbApp.parseSQL(new StringBuffer("select * from Employee where salary <= 10000"));
+//        PrintWriter pw = new PrintWriter(System.out);
+//        while(iterator.hasNext()) {
+//            Record next = iterator.next();
+//            pw.println(next);
+//        }
+//        pw.flush();
+        dbApp.parseSQL(new StringBuffer("create INDEX XYZIndex2 on Employee (name, salary, birth_time)"));
+    }
+
+    private static void printOctrees() {
         Table table = (Table) Deserializer.deserialize(DBApp.getTableInfoFileLocation("Employee"));
         for(IndexMetaInfo info: table.getIndicesInfo()) {
             Octree.deserializeIndex(info).printLeafs();
         }
     }
+
 }
 

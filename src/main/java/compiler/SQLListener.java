@@ -67,6 +67,26 @@ public interface SQLListener extends ParseTreeListener {
 	 */
 	void exitCreateTableStatement(SQLParser.CreateTableStatementContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SQLParser#createIndexStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterCreateIndexStatement(SQLParser.CreateIndexStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#createIndexStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitCreateIndexStatement(SQLParser.CreateIndexStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SQLParser#indexName}.
+	 * @param ctx the parse tree
+	 */
+	void enterIndexName(SQLParser.IndexNameContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#indexName}.
+	 * @param ctx the parse tree
+	 */
+	void exitIndexName(SQLParser.IndexNameContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SQLParser#columnList}.
 	 * @param ctx the parse tree
 	 */

@@ -1,6 +1,9 @@
 package engine.operations.selection;
 
+import engine.elements.index.IndexMetaInfo;
 import engine.exceptions.DBAppException;
+
+import java.util.Hashtable;
 
 @SuppressWarnings("RedundantThrows")
 public class SQLTerm {
@@ -17,6 +20,10 @@ public class SQLTerm {
         this._strColumnName = _strColumnName;
         this._strOperator = _strOperator;
         this._objValue = _objValue;
+    }
+
+    boolean isANegationQuery() {
+        return _strOperator.equals("!=");
     }
 
     @Override

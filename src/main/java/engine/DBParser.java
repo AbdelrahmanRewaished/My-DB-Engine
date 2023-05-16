@@ -8,6 +8,7 @@ import engine.exceptions.DBAppException;
 import engine.exceptions.InvalidTypeException;
 import engine.exceptions.TableDoesNotExistException;
 import engine.exceptions.update_exceptions.UpdateConditionMustOnlyHavePrimaryKeyException;
+import engine.operations.creation.CreateIndexParams;
 import engine.operations.creation.CreateTableParams;
 import engine.operations.deletion.DeleteFromTableParams;
 import engine.operations.insertion.InsertIntoTableParams;
@@ -28,11 +29,11 @@ import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("ALL")
-class DBParser {
+public class DBParser {
     private final SQLParser parser;
     private final SQLParser.QueryContext queryContext;
 
-    DBParser(String sqlStatement) {
+    public DBParser(String sqlStatement) {
         CharStream input = CharStreams.fromString(sqlStatement);
         // Create a lexer from the input
         SQLLexer lexer = new SQLLexer(input);
@@ -46,6 +47,8 @@ class DBParser {
     String getCommandType() {
         return queryContext.getChild(0).getChild(0).getText();
     }
+
+    String getCreationType() {return queryContext.getChild(0).getChild(1).getText();}
 
     private String getValue(SQLParser.ValueContext valueContext) {
         if(valueContext.date() != null) {
@@ -77,7 +80,7 @@ class DBParser {
         }
         return sqlTerms;
     }
-    SelectFromTableParams getSelectionParams() throws DBAppException {
+    public SelectFromTableParams getSelectionParams() throws DBAppException {
         SQLParser.SelectStatementContext selectStatement = queryContext.selectStatement();
         String tableName = selectStatement.tableName().getText();
         List<String> operators = new ArrayList<>();
@@ -147,7 +150,7 @@ class DBParser {
             bound.setMin(minBound);
         }
     }
-    CreateTableParams getCreationParams() throws DBAppException {
+    CreateTableParams getTableCreationParams() throws DBAppException {
         SQLParser.CreateTableStatementContext createTableStatementContext = queryContext.createTableStatement();
         String tableName = createTableStatementContext.tableName().getText();
         String clusteringKey = null;
@@ -249,5 +252,18 @@ class DBParser {
         }
         Hashtable<String, Object> colNameValue = getColNameValue(tableName, conditionColumns, conditionValues);
         return new DeleteFromTableParams(tableName, colNameValue);
+    }
+
+    public CreateIndexParams getIndexCreationParams() throws DBAppException {
+        SQLParser.CreateIndexStatementContext createIndexStatementContext = queryContext.createIndexStatement();
+        String tableName = createIndexStatementContext.tableName().getText();
+        String indexName = createIndexStatementContext.indexName().getText();
+        SQLParser.ColumnListContext columnListContext = createIndexStatementContext.columnList();
+        List<String> columnNamesList = new ArrayList<>();
+        for(SQLParser.ColumnNameContext columnNameContext: columnListContext.columnName()) {
+            columnNamesList.add(columnNameContext.getText());
+        }
+        String[] columnNames = columnNamesList.toArray(new String[0]);
+        return new CreateIndexParams(tableName, indexName, columnNames);
     }
 }

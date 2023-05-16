@@ -37,6 +37,7 @@ public class DeleteAllMatchingRecords implements DeletionStrategy{
             if(currentPage.isEmpty()) {
                 table.removePageInfo(i);
                 FileHandler.deleteFile(currentPageMetaInfo.getLocation());
+                Deletion.updateRecordsPageNumbersBelowDeletedPage(table, i);
             }
             else {
                 Serializer.serialize(currentPageMetaInfo.getLocation(), currentPage);

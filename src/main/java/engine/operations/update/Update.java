@@ -17,11 +17,21 @@ public class Update {
     public synchronized int updateTable() throws DBAppException {
         UpdateValidator.validate(params);
         table = (Table) Deserializer.deserialize(DBApp.getTableInfoFileLocation(params.getTableName()));
-        if(params.getClusteringKeyValue() == null) {
-            strategy = new UpdateAllRecords(params, table);
+        if(table.isHavingIndices()) {
+            if(params.getClusteringKeyValue() == null) {
+                strategy = new UpdateAllRecordsWithIndex(params, table);
+            }
+            else {
+                strategy = new UpdateRecordOnClusteringKeyWithIndex(params, table);
+            }
         }
         else {
-            strategy = new UpdateRecordOnClusteringKey(params, table);
+            if(params.getClusteringKeyValue() == null) {
+                strategy = new UpdateAllRecords(params, table);
+            }
+            else {
+                strategy = new UpdateRecordOnClusteringKey(params, table);
+            }
         }
         return strategy.updateTable();
     }

@@ -11,14 +11,13 @@ import engine.operations.deletion.DeleteFromTableParams;
 import engine.operations.deletion.Deletion;
 import engine.operations.dropping.Dropping;
 import engine.operations.insertion.InsertIntoTableParams;
-import engine.operations.insertion.Insertion;
 import engine.operations.insertion.InsertionWithIndex;
 import engine.operations.selection.SQLTerm;
 import engine.operations.selection.SelectFromTableParams;
 import engine.operations.selection.Selection;
 import engine.operations.update.Update;
 import engine.operations.update.UpdateTableParams;
-import engine.operations.update.UpdateWithIndex;
+import engine.operations.update.UpdateRecordOnClusteringKeyWithIndex;
 import utilities.PropertiesReader;
 
 import java.util.*;
@@ -88,7 +87,11 @@ public class DBApp {
     public void createIndex(String strTableName,
                             String[] strarrColName) throws DBAppException
     {
-        printMessage(String.format("Index is created successfully in Table '%s' on column '%s'", strTableName, strarrColName));
+        createIndex(strTableName, "XYZIndex", strarrColName);
+    }
+    private void createIndex(String tableName, String indexName, String[] columnsToIndex) throws DBAppException {
+        new IndexCreation(new CreateIndexParams(tableName, indexName, columnsToIndex)).createIndex();
+        printMessage(String.format("Index '%s' is created successfully in Table '%s' on column '%s'", indexName, tableName, columnsToIndex));
     }
 
 
@@ -112,7 +115,7 @@ public class DBApp {
                             Hashtable<String,Object> htblColNameValue )
             throws DBAppException
     {
-        int recordsUpdated = new UpdateWithIndex(new UpdateTableParams(strTableName, strClusteringKeyValue, new Record(htblColNameValue))).updateTable();
+        int recordsUpdated = new Update(new UpdateTableParams(strTableName, strClusteringKeyValue, new Record(htblColNameValue))).updateTable();
         printMessage(String.format("%d Row(s) Affected", recordsUpdated));
     }
 
@@ -132,11 +135,8 @@ public class DBApp {
                                     String[] strarrOperators)
             throws DBAppException
     {
-        return new Selection(new SelectFromTableParams(arrSQLTerms, strarrOperators)).select();
-    }
-    public void createIndex(String indexName, String tableName, String[] columnNamesToBeIndexed) throws DBAppException {
-        new IndexCreation(new CreateIndexParams(tableName, indexName, columnNamesToBeIndexed)).createIndex();
-        printMessage(String.format("Index '%s' is created successfully in Table '%s' on columns '%s'", indexName, tableName, Arrays.toString(columnNamesToBeIndexed)));
+        Selection selection = new Selection(new SelectFromTableParams(arrSQLTerms, strarrOperators));
+        return selection.select();
     }
 
     public Iterator parseSQL( StringBuffer strbufSQL ) throws
@@ -152,8 +152,16 @@ public class DBApp {
                 return selectFromTable(sp.getSqlTerms(), sp.getLogicalOperators());
             }
             case "CREATE" -> {
-                CreateTableParams cp = parser.getCreationParams();
-                createTable(cp.getTableName(), cp.getClusteringKey(), cp.getColNameType(), cp.getColNameMin(), cp.getColNameMax());
+                switch(parser.getCreationType().toUpperCase()) {
+                    case "TABLE" -> {
+                        CreateTableParams cp = parser.getTableCreationParams();
+                        createTable(cp.getTableName(), cp.getClusteringKey(), cp.getColNameType(), cp.getColNameMin(), cp.getColNameMax());
+                    }
+                    default -> {
+                        CreateIndexParams cp = parser.getIndexCreationParams();
+                        createIndex(cp.getTableName(), cp.getIndexName(), cp.getIndexedColumns());
+                    }
+                }
                 return null;
             }
             case "INSERT" -> {

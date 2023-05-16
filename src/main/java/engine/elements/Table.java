@@ -1,6 +1,8 @@
 package engine.elements;
 
 import engine.elements.index.IndexMetaInfo;
+import engine.elements.index.Octree;
+import utilities.serialization.Serializer;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -106,6 +108,16 @@ public class Table implements Serializable {
     }
     public boolean isHavingIndices() {
         return ! indicesInfo.isEmpty();
+    }
+    public void updateRecordPageNumberInIndices(Record record, int newPageNumber) {
+        for(IndexMetaInfo indexMetaInfo: getIndicesInfo()) {
+            Octree index = Octree.deserializeIndex(indexMetaInfo);
+            index.updateRecordPageNumber(this, record, newPageNumber);
+            Serializer.serialize(indexMetaInfo.getIndexFileLocation(), index);
+        }
+    }
+    public void updateRecordPageNumberInIndex(Record record, int newPageNumber, Octree index) {
+        index.updateRecordPageNumber(this, record, newPageNumber);
     }
     @Override
     public String toString() {

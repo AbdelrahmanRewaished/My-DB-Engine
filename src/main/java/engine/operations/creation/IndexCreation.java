@@ -6,6 +6,7 @@ import engine.elements.PageMetaInfo;
 import engine.elements.Record;
 import engine.elements.Table;
 import engine.elements.index.IndexMetaInfo;
+import engine.elements.index.IndexRecordInfo;
 import engine.elements.index.Octree;
 import engine.exceptions.DBAppException;
 import utilities.FileHandler;
@@ -23,10 +24,11 @@ public class IndexCreation {
     }
 
     private void fillIndexWithTableRecords(Table table, Octree index) throws DBAppException {
-        for(PageMetaInfo pageMetaInfo: table.getPagesInfo()) {
+        for(int i = 0; i < table.getPagesInfo().size(); i++) {
+            PageMetaInfo pageMetaInfo = table.getPagesInfo().get(i);
             Page page = Page.deserializePage(pageMetaInfo);
             for (Record record : page) {
-                index.insert(table, record);
+                index.insert(table, new IndexRecordInfo((Comparable) record.get(table.getClusteringKey()), i));
             }
         }
     }

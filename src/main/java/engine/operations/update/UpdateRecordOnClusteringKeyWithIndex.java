@@ -1,5 +1,6 @@
 package engine.operations.update;
 
+import engine.elements.Table;
 import engine.elements.index.IndexMetaInfo;
 import engine.elements.index.Octree;
 import engine.exceptions.DBAppException;
@@ -7,26 +8,25 @@ import utilities.datatypes.DatabaseTypesHandler;
 import utilities.metadata.MetadataReader;
 import utilities.serialization.Serializer;
 
-public class UpdateWithIndex extends Update{
+public class UpdateRecordOnClusteringKeyWithIndex implements UpdateStrategy{
 
-    public UpdateWithIndex(UpdateTableParams params) {
-        super(params);
+    private final UpdateTableParams params;
+    private final Table table;
+    public UpdateRecordOnClusteringKeyWithIndex(UpdateTableParams params, Table table) {
+        this.params = params;
+        this.table = table;
     }
     @Override
     public synchronized int updateTable() throws DBAppException {
-        int updatedRecords = super.updateTable();
+        String clusteringKeyType = MetadataReader.getTableColumnMetadataRecord(table.getName(), table.getClusteringKey()).getColumnType();
+        Comparable clusteringKeyValue = DatabaseTypesHandler.getObject(params.getClusteringKeyValue(), clusteringKeyType);
+        int updatedRecords = 0;
         for(IndexMetaInfo indexMetaInfo: table.getIndicesInfo()) {
             if(! indexMetaInfo.isContainingIndexedColumns(params.getColNameValue())) {
                 continue;
             }
             Octree index = Octree.deserializeIndex(indexMetaInfo);
-            if(strategy instanceof UpdateAllRecords) {
-                index.refreshAllRecords(table, params.getColNameValue());
-            }
-            else {
-                String clusteringKeyType = MetadataReader.getTableColumnMetadataRecord(params.getTableName(), table.getClusteringKey()).getColumnType();
-                index.refreshRecordWithPrimaryKey(table, DatabaseTypesHandler.getObject(params.getClusteringKeyValue(), clusteringKeyType), params.getColNameValue());
-            }
+            updatedRecords = index.updateRecordWithPrimaryKey(table, clusteringKeyValue, params.getColNameValue());
             Serializer.serialize(indexMetaInfo.getIndexFileLocation(), index);
         }
         return updatedRecords;

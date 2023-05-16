@@ -1,6 +1,6 @@
 grammar SQL;
 
-query: selectStatement | insertStatement | updateStatement | deleteStatement | createTableStatement ;
+query: selectStatement | insertStatement | updateStatement | deleteStatement | createTableStatement | createIndexStatement;
 
 selectStatement:  SELECT '*' FROM tableName WHERE conditionList |  SELECT '*' FROM tableName;
 
@@ -11,6 +11,10 @@ updateStatement: UPDATE tableName SET updateList WHERE equalityExpression | UPDA
 deleteStatement: DELETE FROM tableName WHERE deleteConditionList | DELETE FROM tableName;
 
 createTableStatement: CREATE TABLE tableName '(' columnDefinition PRIMARYKEY (',' columnDefinition)* ')' ;
+
+createIndexStatement: CREATE INDEX indexName ON tableName '(' columnList ')';
+
+indexName: word ;
 
 columnList: columnName (',' columnName)* ;
 
@@ -92,11 +96,15 @@ FLOAT: 'float' | 'floaT' | 'floAt' | 'floAT' | 'flOat' | 'flOaT' | 'flOAt' | 'fl
 
 VARCHAR: 'varchar' | 'varchaR' | 'varchAr' | 'varchAR' | 'varcHar' | 'varcHaR' | 'varcHAr' | 'varcHAR' | 'varChar' | 'varChaR' | 'varChAr' | 'varChAR' | 'varCHar' | 'varCHaR' | 'varCHAr' | 'varCHAR' | 'vaRchar' | 'vaRchaR' | 'vaRchAr' | 'vaRchAR' | 'vaRcHar' | 'vaRcHaR' | 'vaRcHAr' | 'vaRcHAR' | 'vaRChar' | 'vaRChaR' | 'vaRChAr' | 'vaRChAR' | 'vaRCHar' | 'vaRCHaR' | 'vaRCHAr' | 'vaRCHAR' | 'vArchar' | 'vArchaR' | 'vArchAr' | 'vArchAR' | 'vArcHar' | 'vArcHaR' | 'vArcHAr' | 'vArcHAR' | 'vArChar' | 'vArChaR' | 'vArChAr' | 'vArChAR' | 'vArCHar' | 'vArCHaR' | 'vArCHAr' | 'vArCHAR' | 'vARchar' | 'vARchaR' | 'vARchAr' | 'vARchAR' | 'vARcHar' | 'vARcHaR' | 'vARcHAr' | 'vARcHAR' | 'vARChar' | 'vARChaR' | 'vARChAr' | 'vARChAR' | 'vARCHar' | 'vARCHaR' | 'vARCHAr' | 'vARCHAR' | 'Varchar' | 'VarchaR' | 'VarchAr' | 'VarchAR' | 'VarcHar' | 'VarcHaR' | 'VarcHAr' | 'VarcHAR' | 'VarChar' | 'VarChaR' | 'VarChAr' | 'VarChAR' | 'VarCHar' | 'VarCHaR' | 'VarCHAr' | 'VarCHAR' | 'VaRchar' | 'VaRchaR' | 'VaRchAr' | 'VaRchAR' | 'VaRcHar' | 'VaRcHaR' | 'VaRcHAr' | 'VaRcHAR' | 'VaRChar' | 'VaRChaR' | 'VaRChAr' | 'VaRChAR' | 'VaRCHar' | 'VaRCHaR' | 'VaRCHAr' | 'VaRCHAR' | 'VArchar' | 'VArchaR' | 'VArchAr' | 'VArchAR' | 'VArcHar' | 'VArcHaR' | 'VArcHAr' | 'VArcHAR' | 'VArChar' | 'VArChaR' | 'VArChAr' | 'VArChAR' | 'VArCHar' | 'VArCHaR' | 'VArCHAr' | 'VArCHAR' | 'VARchar' | 'VARchaR' | 'VARchAr' | 'VARchAR' | 'VARcHar' | 'VARcHaR' | 'VARcHAr' | 'VARcHAR' | 'VARChar' | 'VARChaR' | 'VARChAr' | 'VARChAR' | 'VARCHar' | 'VARCHaR' | 'VARCHAr' | 'VARCHAR';
 
-DATE: 'date' | 'datE' | 'daTe' | 'daTE' | 'dAte' | 'dAtE' | 'dATe' | 'dATE' | 'Date' | 'DatE' | 'DaTe' | 'DaTE' | 'DAte' | 'DAtE' | 'DATe' | 'DATE';
+DATE: 'datE' | 'daTe' | 'daTE' | 'dAte' | 'dAtE' | 'dATe' | 'dATE' | 'Date' | 'DatE' | 'DaTe' | 'DaTE' | 'DAte' | 'DAtE' | 'DATe' | 'DATE';
 
 CHECK: 'check' | 'checK' | 'cheCk' | 'cheCK' | 'chEck' | 'chEcK' | 'chECk' | 'chECK' | 'cHeck' | 'cHecK' | 'cHeCk' | 'cHeCK' | 'cHEck' | 'cHEcK' | 'cHECk' | 'cHECK' | 'Check' | 'ChecK' | 'CheCk' | 'CheCK' | 'ChEck' | 'ChEcK' | 'ChECk' | 'ChECK' | 'CHeck' | 'CHecK' | 'CHeCk' | 'CHeCK' | 'CHEck' | 'CHEcK' | 'CHECk' | 'CHECK';
 
 NULL: 'null'| 'nulL' | 'nuLl'| 'nuLL' | 'nUll' | 'nUlL' | 'nULl' | 'nULL'| 'Null' | 'NulL' | 'NuLl' | 'NuLL' | 'NUll'| 'NUlL' | 'NULl' | 'NULL';
+
+INDEX: 'indeX' | 'indEx' | 'indEX' | 'inDex' | 'inDeX' | 'inDEx' | 'inDEX' | 'iNdex' | 'iNdeX' | 'iNdEx' | 'iNdEX' | 'iNDex' | 'iNDeX' | 'iNDEx' | 'iNDEX' | 'IndeX' | 'IndEx' | 'IndEX' | 'InDex' | 'InDeX' | 'InDEx' | 'InDEX' | 'INdex' | 'INdeX' | 'INdEx' | 'INdEX' | 'INDex' | 'INDeX' | 'INDEx' | 'INDEX';
+
+ON: 'on' | 'oN' | 'On' | 'ON';
 
 LETTER: [a-zA-Z] | '_';
 

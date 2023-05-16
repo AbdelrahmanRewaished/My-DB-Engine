@@ -1,6 +1,7 @@
 package engine.operations.insertion;
 
 import engine.elements.index.IndexMetaInfo;
+import engine.elements.index.IndexRecordInfo;
 import engine.elements.index.Octree;
 import engine.exceptions.DBAppException;
 import utilities.serialization.Serializer;
@@ -10,12 +11,13 @@ public class InsertionWithIndex extends Insertion{
         super(params);
     }
 
-    public synchronized void insertIntoTable() throws DBAppException {
-        super.insertIntoTable();
+    public synchronized IndexRecordInfo insertIntoTable() throws DBAppException {
+        IndexRecordInfo recordInfoToBeInserted = super.insertIntoTable();
         for(IndexMetaInfo indexMetaInfo: table.getIndicesInfo()) {
             Octree index = Octree.deserializeIndex(indexMetaInfo);
-            index.insert(table, params.getRecord());
+            index.insert(table, recordInfoToBeInserted);
             Serializer.serialize(indexMetaInfo.getIndexFileLocation(), index);
         }
+        return recordInfoToBeInserted;
     }
 }

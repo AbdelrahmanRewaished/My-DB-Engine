@@ -1,7 +1,11 @@
 package engine.operations.deletion;
 
 import engine.DBApp;
+import engine.elements.Page;
+import engine.elements.PageMetaInfo;
+import engine.elements.Record;
 import engine.elements.Table;
+import engine.elements.index.Octree;
 import engine.exceptions.DBAppException;
 import utilities.serialization.Deserializer;
 import utilities.serialization.Serializer;
@@ -38,5 +42,23 @@ public class Deletion{
             Serializer.serialize(DBApp.getTableInfoFileLocation(params.getTableName()), table);
         }
         return recordsDeleted;
+    }
+    public static void updateRecordsPageNumbersBelowDeletedPage(Table table, int currentPageIndex) {
+        while(currentPageIndex < table.getPagesInfo().size()) {
+            PageMetaInfo pageMetaInfo = table.getPagesInfo().get(currentPageIndex);
+            for(Record record: Page.deserializePage(pageMetaInfo)) {
+                table.updateRecordPageNumberInIndices(record, currentPageIndex);
+            }
+            currentPageIndex++;
+        }
+    }
+    public static void updateRecordsPageNumbersBelowDeletedPage(Table table, int currentPageIndex, Octree index) {
+        while(currentPageIndex < table.getPagesInfo().size()) {
+            PageMetaInfo pageMetaInfo = table.getPagesInfo().get(currentPageIndex);
+            for(Record record: Page.deserializePage(pageMetaInfo)) {
+                table.updateRecordPageNumberInIndex(record, currentPageIndex, index);
+            }
+            currentPageIndex++;
+        }
     }
 }

@@ -222,7 +222,7 @@ public class DatabaseTypesHandler {
                 return cal.getTime();
             }
             case doubleType -> {
-                double smallestFloatingPointDifference = 0.0000000000000001;
+                double smallestFloatingPointDifference = 0.0001;
                 return ((double) value) + addedValue * smallestFloatingPointDifference;
             }
             case stringType -> {

@@ -1,18 +1,20 @@
 package engine.elements.index;
 
 
+import engine.elements.Page;
+import engine.elements.PageMetaInfo;
 import engine.elements.Record;
 import engine.elements.Table;
 import engine.exceptions.DBAppException;
+import engine.operations.selection.SelectFromTableParams;
 import utilities.serialization.Deserializer;
+import utilities.serialization.Serializer;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
+@SuppressWarnings("rawtypes")
 public class Octree implements Serializable {
 
     private OctreeNode root;
@@ -37,17 +39,18 @@ public class Octree implements Serializable {
         index.setIndexMetaInfo(indexMetaInfo);
         return index;
     }
-    public void insert(Table table, Record record) throws DBAppException {
+    public void insert(Table table, IndexRecordInfo recordInfo) throws DBAppException {
         if(root == null) {
             root = new OctreeNode(treeEntireBoundary);
         }
-        insertionHelper(table, root, record);
+        insertionHelper(table, root, recordInfo);
     }
 
-    private void insertionHelper(Table table, OctreeNode node, Record record) throws DBAppException {
+    private void insertionHelper(Table table, OctreeNode node, IndexRecordInfo recordInfo) throws DBAppException {
+        Record record = Record.getRecord(table, recordInfo);
         while (true) {
             if (node.isALeaf()) {
-                node.addRecord(table, record);
+                node.addRecord(table, recordInfo);
                 if (node.isOverFlown()) {
                     node.initializeChildren();
                     node.distributeDataInChildren(table);
@@ -66,29 +69,22 @@ public class Octree implements Serializable {
                 return;
             }
         }
-
     }
 
 
-    public List<Record> deleteMatchingRecords(Table table, Hashtable<String, Object> recordToDelete, boolean toDeleteTableRecords) {
+    public int deleteMatchingRecords(Table table, Hashtable<String, Object> recordToDelete, boolean toDeleteTableRecords) {
         if(root == null) {
-            return new ArrayList<>();
+            return 0;
         }
-        List<Record> deletedRecords;
-        if(root.isALeaf()) {
-             deletedRecords = root.deleteMatchingEntries(table, recordToDelete, toDeleteTableRecords);
-        }
-        else {
-            deletedRecords = deletionHelper(table, root, recordToDelete, toDeleteTableRecords);
-        }
+        int deletedRecords = deletionHelper(table, root, recordToDelete, toDeleteTableRecords);
         if(root.getEntries() != null && root.getEntries().isEmpty()) {
             root = null;
         }
         return deletedRecords;
     }
 
-    private List<Record> deletionHelper(Table table, OctreeNode node, Hashtable<String, Object> recordToDelete, boolean toDeleteTableRecords) {
-        List<Record> deletedRecordsInfo = new ArrayList<>();
+    private int deletionHelper(Table table, OctreeNode node, Hashtable<String, Object> recordToDelete, boolean toDeleteTableRecords) {
+        int deletedRecords = 0;
         Stack<OctreeNode> stack = new Stack<>();
         stack.push(node);
         while(! stack.isEmpty()) {
@@ -100,90 +96,99 @@ public class Octree implements Serializable {
                 if (!child.isALeaf()) {
                     stack.push(child);
                 } else if(! child.getEntries().isEmpty()){
-                     deletedRecordsInfo.addAll(child.deleteMatchingEntries(table, recordToDelete, toDeleteTableRecords));
+                     deletedRecords += child.deleteMatchingEntries(table, recordToDelete, toDeleteTableRecords, this);
                 }
             }
             if (currentNode.isHavingLeafChildren() && currentNode.isUnderFlown()) {
                 currentNode.nullifyChildren();
             }
         }
-        return deletedRecordsInfo;
-    }
-    public List<IndexRecordsInfo> deleteAllEntries() {
-        if(root == null) {
-            return new ArrayList<>();
-        }
-        List<IndexRecordsInfo> deletedRecords = deleteAllEntriesHelper(root);
-        root = null;
         return deletedRecords;
     }
-    private List<IndexRecordsInfo> deleteAllEntriesHelper(OctreeNode node) {
-        List<IndexRecordsInfo> deletedRecordsInfo = new ArrayList<>();
-        Stack<OctreeNode> stack = new Stack<>();
-        stack.push(node);
-        while(!stack.isEmpty()) {
-            OctreeNode currentNode = stack.pop();
-            if(currentNode.isALeaf()) {
-                deletedRecordsInfo.addAll(currentNode.getEntries());
-                currentNode.getEntries().clear();
+    public void deleteAllEntries() {
+        root = null;
+    }
+    public int updateRecordWithPrimaryKey(Table table, Comparable clusteringKeyValue, Hashtable<String, Object> colNameValue) throws DBAppException {
+        if(root == null) {
+            return 0;
+        }
+        int requiredPageIndex = table.findPageIndexToLookIn(clusteringKeyValue);
+        if(requiredPageIndex == -1) {
+            return 0;
+        }
+        PageMetaInfo pageMetaInfo = table.getPagesInfo().get(requiredPageIndex);
+        Page page = Page.deserializePage(pageMetaInfo);
+        int requiredRecordIndex = page.findRecordIndex(table.getClusteringKey(), clusteringKeyValue);
+        if(requiredRecordIndex == -1) {
+            return 0;
+        }
+        Record recordToDelete = page.get(requiredRecordIndex);
+        deleteMatchingRecords(table, recordToDelete, false);
+        recordToDelete.updateValues(colNameValue);
+        Serializer.serialize(pageMetaInfo.getLocation(), page);
+        insert(table, new IndexRecordInfo((Comparable) recordToDelete.get(table.getClusteringKey()), requiredPageIndex));
+        return 1;
+    }
+    public int updateAllRecords(Table table) throws DBAppException {
+        if(root == null) {
+            return 0;
+        }
+        deleteAllEntries();
+        int updatedRecords = 0;
+        for(int i = 0; i < table.getPagesInfo().size(); i++) {
+            PageMetaInfo pageMetaInfo = table.getPagesInfo().get(i);
+            Page page = Page.deserializePage(pageMetaInfo);
+            for(Record record: page) {
+                insert(table, new IndexRecordInfo((Comparable) record.get(table.getClusteringKey()), i));
             }
-            else {
-                for(OctreeNode child: currentNode.getChildren()) {
-                    stack.push(child);
+            updatedRecords += page.size();
+            Serializer.serialize(pageMetaInfo.getLocation(), page);
+        }
+        return updatedRecords;
+    }
+    public void updateRecordPageNumber(Table table, Record record, int newPageNumber) {
+        if(root == null) {
+            return;
+        }
+        OctreeNode currentNode = root;
+        while(true) {
+            if(currentNode.isALeaf()) {
+                currentNode.updateRecordInfo(table, record, newPageNumber);
+                return;
+            }
+            boolean childFound = false;
+            for(OctreeNode child: currentNode.getChildren()) {
+                if(child.getBoundary().isRecordInBounds(record)) {
+                    currentNode = child;
+                    childFound = true;
+                    break;
                 }
             }
-        }
-        return deletedRecordsInfo;
-    }
-
-    public void refreshRecordWithPrimaryKey(Table table, Comparable clusteringKeyValue, Hashtable<String, Object> colNameValue) throws DBAppException {
-        if(root == null) {
-            return;
-        }
-        Hashtable<String, Object> recordToDelete = new Hashtable<>();
-        recordToDelete.put(table.getClusteringKey(), clusteringKeyValue);
-        List<Record> recordsInfoToBeInserted = deleteMatchingRecords(table, recordToDelete, false);
-        for(Record record: recordsInfoToBeInserted) {
-            record.updateValues(colNameValue);
-        }
-        for(Record record: recordsInfoToBeInserted) {
-            insert(table, record);
-        }
-    }
-    public void refreshAllRecords(Table table, Hashtable<String, Object> colNameValue) throws DBAppException {
-        if(root == null) {
-            return;
-        }
-        List<IndexRecordsInfo> deletedRecords = deleteAllEntries();
-        for(IndexRecordsInfo indexRecordsInfo: deletedRecords) {
-            for(Record record: indexRecordsInfo) {
-                record.updateValues(colNameValue);
-                insert(table, record);
+            if(! childFound) {
+                break;
             }
         }
     }
-    public boolean find(Comparable element) {
+    public Iterator<Record> getMatchingRecordsIterator(Table table, SelectFromTableParams params) {
         if(root == null) {
-            return false;
+            return Collections.emptyIterator();
         }
+        List<Record> selectedRecords = new Vector<>();
         Stack<OctreeNode> stack = new Stack<>();
         stack.push(root);
         while(! stack.isEmpty()) {
-            OctreeNode curr = stack.pop();
-            if (! curr.isALeaf()) {
-                for(OctreeNode child: curr.getChildren()) {
+            OctreeNode currentNode = stack.pop();
+            if(currentNode.isALeaf()) {
+                selectedRecords.addAll(currentNode.getMatchingRecordsIterator(table, params));
+                continue;
+            }
+            for(OctreeNode child: currentNode.getChildren()) {
+                if(child.getBoundary().isSqlTermsInBounds(params)) {
                     stack.push(child);
                 }
             }
-            else {
-                for(IndexRecordsInfo entry: curr.getEntries()) {
-                    if(entry.contains(element)) {
-                        return true;
-                    }
-                }
-            }
         }
-        return false;
+        return selectedRecords.iterator();
     }
 
     @Override

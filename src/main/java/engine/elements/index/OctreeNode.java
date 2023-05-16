@@ -5,17 +5,21 @@ import engine.elements.PageMetaInfo;
 import engine.elements.Record;
 import engine.elements.Table;
 import engine.exceptions.DBAppException;
+import engine.operations.deletion.Deletion;
+import engine.operations.selection.SelectFromTableParams;
 import utilities.FileHandler;
 import utilities.PropertiesReader;
 import utilities.datatypes.DatabaseTypesHandler;
 import utilities.serialization.Serializer;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
 
 import static engine.elements.index.OctreeLocations.*;
 
 
+@SuppressWarnings("rawtypes")
 class OctreeNode implements Serializable {
     private static final int maxEntriesPerNode = Integer.parseInt(PropertiesReader.getProperty("MaximumEntriesinOctreeNode"));
 
@@ -24,6 +28,9 @@ class OctreeNode implements Serializable {
     private List<IndexRecordsInfo> entries;
 
     private final OctreeNode[] children;
+
+    @Serial
+    private static final long serialVersionUID = 166228508102341865L;
 
     OctreeNode(Boundary boundary) {
         this.boundary = boundary;
@@ -70,15 +77,15 @@ class OctreeNode implements Serializable {
         }
         return true;
     }
-    void addRecord(Table table, Record record) {
+    void addRecord(Table table, IndexRecordInfo recordInfo) {
         for(IndexRecordsInfo entry: entries) {
-           if(entry.contains(table, record)) {
-               entry.add(record);
+           if(entry.contains(table, recordInfo)) {
+               entry.add(recordInfo);
                return;
            }
         }
         IndexRecordsInfo recordsInfo = new IndexRecordsInfo();
-        recordsInfo.add(record);
+        recordsInfo.add(recordInfo);
         entries.add(recordsInfo);
     }
     void addEntry(IndexRecordsInfo entry) {
@@ -149,34 +156,35 @@ class OctreeNode implements Serializable {
             node.entries = null;
         }
     }
-    private void deleteTableRecords(Table tableContainingIndex, Record record) {
-        Comparable clusteringKeyValue = (Comparable) record.get(tableContainingIndex.getClusteringKey());
-        int requiredPageInfoIndex = tableContainingIndex.findPageIndexToLookIn(clusteringKeyValue);
-        PageMetaInfo pageMetaInfo = tableContainingIndex.getPagesInfo().get(requiredPageInfoIndex);
+    private void deleteTableRecords(Table tableContainingIndex, IndexRecordInfo recordInfo, Octree index) {
+        PageMetaInfo pageMetaInfo = tableContainingIndex.getPagesInfo().get(recordInfo.getPageNumber());
         Page page = Page.deserializePage(pageMetaInfo);
-        int requiredRecordIndexInPage = page.findRecordIndex(tableContainingIndex.getClusteringKey(), clusteringKeyValue);
+        int requiredRecordIndexInPage = page.findRecordIndex(tableContainingIndex.getClusteringKey(), recordInfo.getClusteringKeyValue());
         page.removeRecord(requiredRecordIndexInPage, tableContainingIndex.getClusteringKey());
         if(! page.isEmpty()) {
             Serializer.serialize(page.getPageInfo().getLocation(), page);
         }
         else {
-            tableContainingIndex.removePageInfo(requiredPageInfoIndex);
+            tableContainingIndex.removePageInfo(recordInfo.getPageNumber());
             FileHandler.deleteFile(pageMetaInfo.getLocation());
+            Deletion.updateRecordsPageNumbersBelowDeletedPage(tableContainingIndex, recordInfo.getPageNumber(), index);
         }
     }
-    List<Record> deleteMatchingEntries(Table tableContainingIndex, Hashtable<String, Object> recordToDelete, boolean toDeleteTableRecords) {
-        List<Record> deletedRecords = new ArrayList<>();
+    int deleteMatchingEntries(Table tableContainingIndex, Hashtable<String, Object> recordToDelete, boolean toDeleteTableRecords, Octree index) {
+        int deletedRecords = 0;
         for(int i = 0; i < entries.size(); ) {
             IndexRecordsInfo entry = entries.get(i);
             for(int j = 0; j < entry.size(); ) {
-                Record record = entry.get(j);
+                IndexRecordInfo recordInfo = entry.get(j);
+                Record record = Record.getRecord(tableContainingIndex, recordInfo);
                 if(! record.hasMatchingValues(recordToDelete)) {
                     j++;
                     continue;
                 }
-                deletedRecords.add(entry.remove(j));
+                entry.remove(j);
+                deletedRecords++;
                 if(toDeleteTableRecords) {
-                    deleteTableRecords(tableContainingIndex, record);
+                    deleteTableRecords(tableContainingIndex, recordInfo, index);
                 }
             }
             if(entry.isEmpty()) {
@@ -187,6 +195,16 @@ class OctreeNode implements Serializable {
             }
         }
         return deletedRecords;
+    }
+    void updateRecordInfo(Table table, Record record, int newPageNumber) {
+        for(IndexRecordsInfo entry: entries) {
+            for(IndexRecordInfo recordInfo: entry) {
+                if(record.get(table.getClusteringKey()).equals(recordInfo.getClusteringKeyValue())) {
+                    recordInfo.setPageNumber(newPageNumber);
+                    return;
+                }
+            }
+        }
     }
     void nullifyChildren() {
         entries = new ArrayList<>(maxEntriesPerNode);
@@ -202,4 +220,16 @@ class OctreeNode implements Serializable {
     }
 
 
+    List<Record> getMatchingRecordsIterator(Table table, SelectFromTableParams params) {
+        List<Record> matchingRecords = new ArrayList<>();
+        for(IndexRecordsInfo entry: entries) {
+            for(IndexRecordInfo recordInfo: entry) {
+                Record record = Record.getRecord(table, recordInfo);
+                if(record.isMatchingRecord(params)) {
+                    matchingRecords.add(record);
+                }
+            }
+        }
+        return matchingRecords;
+    }
 }

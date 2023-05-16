@@ -4,26 +4,26 @@ import engine.elements.Page;
 import engine.elements.PageMetaInfo;
 import engine.elements.Record;
 import engine.elements.Table;
+import engine.exceptions.DBAppException;
 import utilities.serialization.Serializer;
 
 public class UpdateAllRecords implements UpdateStrategy{
 
-    private UpdateTableParams up;
-    private Table table;
+    final UpdateTableParams params;
+    final Table table;
 
     public UpdateAllRecords(UpdateTableParams up, Table table) {
-        this.up = up;
+        this.params = up;
         this.table = table;
     }
 
     @Override
-    public int updateTable() {
+    public int updateTable() throws DBAppException {
         int totalRecordsUpdated = 0;
         for(PageMetaInfo pageMetaInfo : table.getPagesInfo()) {
             Page currentPage = Page.deserializePage(pageMetaInfo);
-            for(int i = 0; i < currentPage.size(); i++) {
-                Record record = currentPage.get(i);
-                record.updateValues(up.getColNameValue());
+            for (Record record : currentPage) {
+                record.updateValues(params.getColNameValue());
             }
             totalRecordsUpdated += currentPage.size();
             Serializer.serialize(pageMetaInfo.getLocation(), currentPage);

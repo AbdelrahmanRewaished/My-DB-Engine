@@ -3,6 +3,7 @@ package engine.operations.insertion;
 import engine.DBApp;
 import engine.elements.*;
 import engine.elements.Record;
+import engine.elements.index.IndexRecordInfo;
 import engine.exceptions.DBAppException;
 import engine.exceptions.insertion_exceptions.PrimaryKeyAlreadyExistsException;
 import utilities.datatypes.DBAppNull;
@@ -129,6 +130,7 @@ public class Insertion {
             PageMetaInfo nextPageMetaInfo = pagesInfo.get(nextPageIndex);
             currentPage = Page.deserializePage(nextPageMetaInfo);
             currentPage.addRecord(0, table.getClusteringKey(), nextRecord);
+            table.updateRecordPageNumberInIndices(nextRecord, nextPageIndex);
             isPageOverFlown = currentPage.getPageInfo().isOverFlown();
             nextPageIndex++;
         }
@@ -138,6 +140,7 @@ public class Insertion {
             currentPage = getNewPage(table);
             table.addPageInfo(currentPage.getPageInfo());
             currentPage.addRecord(0, table.getClusteringKey(), nextRecord);
+            table.updateRecordPageNumberInIndices(nextRecord, nextPageIndex);
         }
         Serializer.serialize(currentPage.getPageInfo().getLocation(), currentPage);
     }
@@ -149,7 +152,7 @@ public class Insertion {
             }
         }
     }
-    public synchronized void insertIntoTable() throws DBAppException {
+    public synchronized IndexRecordInfo insertIntoTable() throws DBAppException {
         InsertionValidator.validate(params);
         table = (Table) Deserializer.deserialize(DBApp.getTableInfoFileLocation(params.getTableName()));
         Object clusteringValue = record.get(table.getClusteringKey());
@@ -167,5 +170,6 @@ public class Insertion {
             Serializer.serialize(page.getPageInfo().getLocation(), page);
         }
         Serializer.serialize(DBApp.getTableInfoFileLocation(params.getTableName()), table);
+        return new IndexRecordInfo((Comparable) clusteringValue, requiredPageInfoIndex);
     }
 }

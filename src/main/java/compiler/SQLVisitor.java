@@ -46,6 +46,18 @@ public interface SQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitCreateTableStatement(SQLParser.CreateTableStatementContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link SQLParser#createIndexStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCreateIndexStatement(SQLParser.CreateIndexStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#indexName}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIndexName(SQLParser.IndexNameContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link SQLParser#columnList}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

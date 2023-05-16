@@ -1,6 +1,9 @@
 package engine.elements.index;
 
 import engine.elements.Record;
+import engine.operations.selection.SQLTerm;
+import engine.operations.selection.SelectFromTableParams;
+import engine.operations.selection.Selection;
 import utilities.datatypes.DBAppNull;
 
 import java.io.Serial;
@@ -36,6 +39,46 @@ public class Boundary implements Serializable {
             }
         }
         return true;
+    }
+    private boolean isSqlTermInBounds(SQLTerm term) {
+        if(! colNameMin.containsKey(term._strColumnName)) {
+            return true;
+        }
+        if(term._objValue instanceof DBAppNull) {
+            return false;
+        }
+        if(colNameMin.get(term._strColumnName).compareTo(term._objValue) > 0) {
+            if(term._strOperator.contains(">")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        else if(colNameMax.get(term._strColumnName).compareTo(term._objValue) < 0) {
+            if(term._strOperator.contains("<")) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        return true;
+    }
+    boolean isSqlTermsInBounds(SelectFromTableParams params) {
+        SQLTerm term = params.getSqlTerms()[0];
+        if(term._objValue instanceof DBAppNull) {
+            return false;
+        }
+        boolean isInBounds = isSqlTermInBounds(term);
+        for(int i = 1; i < params.getSqlTerms().length; i++) {
+            SQLTerm currentTerm = params.getSqlTerms()[i];
+            if(currentTerm._objValue instanceof DBAppNull) {
+                return false;
+            }
+            isInBounds = Selection.getConditionResult(isInBounds, params.getLogicalOperators()[i - 1], isSqlTermInBounds(currentTerm));
+        }
+        return isInBounds;
     }
 
     @Override
