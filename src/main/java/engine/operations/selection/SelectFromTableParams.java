@@ -93,7 +93,11 @@ public class SelectFromTableParams {
             IndexMetaInfo nextIndexMetaInfo = getCorrespondingTermIndex(table, nextTerm);
             if(indexMetaInfo == null || nextIndexMetaInfo == null) {
                 if(indexMetaInfo != null) {
-                    selectedIndexes.add(indexMetaInfo);
+                    colNameValue.put(term._strColumnName, term._objValue);
+                    if(maxSize < colNameValue.size()) {
+                        maxSize = colNameValue.size();
+                        maxColumnsContainedIndex = indexMetaInfo;
+                    }
                 }
                 continue;
             }
@@ -110,25 +114,27 @@ public class SelectFromTableParams {
                 else {
                     maxColumnsContainedIndex = maxColumnsContainedIndex == null? indexMetaInfo: maxColumnsContainedIndex;
                     selectedIndexes.add(maxColumnsContainedIndex);
-                    selectedIndexes.add(nextIndexMetaInfo);
+                    if(logicalOperators[i].equals("OR")) {
+                        selectedIndexes.add(nextIndexMetaInfo);
+                    }
                     maxSize = 0;
                     maxColumnsContainedIndex = null;
                 }
             }
         }
         SQLTerm term = sqlTerms[i];
+        IndexMetaInfo indexMetaInfo = getCorrespondingTermIndex(table, term);
         if(maxColumnsContainedIndex != null) {
             if(maxSize >= colNameValue.size()) {
                 selectedIndexes.add(maxColumnsContainedIndex);
             }
-            else {
+            else if(indexMetaInfo != null){
                 selectedIndexes.add(getCorrespondingTermIndex(table, term));
             }
             if(logicalOperators[i - 1].equals("AND")) {
                 return selectedIndexes;
             }
         }
-        IndexMetaInfo indexMetaInfo = getCorrespondingTermIndex(table, term);
         if(indexMetaInfo != null) {
             colNameValue.put(term._strColumnName, term._objValue);
             if(maxColumnsContainedIndex != null && maxSize < colNameValue.size()) {

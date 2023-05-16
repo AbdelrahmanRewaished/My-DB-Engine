@@ -148,7 +148,8 @@ public class Test {
 //        dbApp.parseSQL(new StringBuffer("insert into Employee (id, name, salary) values (12, 'emad', 10000)"));
 
 
-
+//        dbApp.parseSQL(new StringBuffer("create table Manager (id int primary key, name varchar(20))"));
+        dbApp.parseSQL(new StringBuffer("insert into Manager (id, name) values (1, 'abdo')"));
 
 //        Iterator<Record> iterator = dbApp.parseSQL(new StringBuffer("select * from Employee where salary <= 10000"));
         PrintWriter pw = new PrintWriter(System.out);
