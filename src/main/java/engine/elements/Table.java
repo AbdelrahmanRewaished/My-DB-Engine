@@ -121,6 +121,7 @@ public class Table implements Serializable {
         for(IndexMetaInfo indexMetaInfo: indicesInfo) {
             Octree index =  Octree.deserializeIndex(indexMetaInfo);
             index.updateRecordPageNumber(clusteringKey, nextRecord, nextPageIndex);
+            Serializer.serialize(indexMetaInfo.getIndexFileLocation(), index);
         }
     }
     @Override
