@@ -40,4 +40,9 @@ public class UpdateRecordOnClusteringKey implements UpdateStrategy{
         Serializer.serialize(pageMetaInfo.getLocation(), page);
         return 1;
     }
+    void updateRecordImmediately(Page page, int recordIndex) {
+        Record recordToUpdate = page.get(recordIndex);
+        recordToUpdate.updateValues(up.getColNameValue());
+        Serializer.serialize(page.getPageInfo().getLocation(), page);
+    }
 }

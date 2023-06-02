@@ -43,22 +43,4 @@ public class Deletion{
         }
         return recordsDeleted;
     }
-    public static void updateRecordsPageNumbersBelowDeletedPage(Table table, int currentPageIndex) {
-        while(currentPageIndex < table.getPagesInfo().size()) {
-            PageMetaInfo pageMetaInfo = table.getPagesInfo().get(currentPageIndex);
-            for(Record record: Page.deserializePage(pageMetaInfo)) {
-                table.updateRecordPageNumberInIndices(record, currentPageIndex);
-            }
-            currentPageIndex++;
-        }
-    }
-    public static void updateRecordsPageNumbersBelowDeletedPage(Table table, int currentPageIndex, Octree index) {
-        while(currentPageIndex < table.getPagesInfo().size()) {
-            PageMetaInfo pageMetaInfo = table.getPagesInfo().get(currentPageIndex);
-            for(Record record: Page.deserializePage(pageMetaInfo)) {
-                table.updateRecordPageNumberInIndex(record, currentPageIndex, index);
-            }
-            currentPageIndex++;
-        }
-    }
 }

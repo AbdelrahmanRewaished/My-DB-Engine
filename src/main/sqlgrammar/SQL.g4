@@ -36,7 +36,7 @@ columnDefinitionConditionList: conditionExpression (AND columnDefinitionConditio
 
 dataType: INT | FLOAT | VARCHAR '(' integer ')' | DATE ;
 
-word: (LETTER)+ (DIGIT | LETTER)*;
+word: (LETTER | '_')+ (DIGIT | LETTER | '_')*;
 
 columnName: word;
 
@@ -52,7 +52,7 @@ integer: (DIGIT)+ | '-'(DIGIT)+;
 
 double: (DIGIT)+'.'(DIGIT)+ | '-'(DIGIT)+'.'(DIGIT)+;
 
-stringWord: (DIGIT | LETTER)+;
+stringWord: (DIGIT | LETTER | SYMBOL)+;
 
 string: '\'' stringWord '\'';
 
@@ -106,7 +106,9 @@ INDEX: 'indeX' | 'indEx' | 'indEX' | 'inDex' | 'inDeX' | 'inDEx' | 'inDEX' | 'iN
 
 ON: 'on' | 'oN' | 'On' | 'ON';
 
-LETTER: [a-zA-Z] | '_';
+LETTER: [a-zA-Z];
+
+SYMBOL: '_' | '-' | '+' | '%' | '$' | '&' | '#' | '@' | '!' | '{' | '}' | '[' | ']' | ':';
 
 DIGIT: [0-9] ;
 

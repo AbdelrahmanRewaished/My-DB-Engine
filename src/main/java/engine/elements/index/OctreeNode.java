@@ -156,52 +156,79 @@ class OctreeNode implements Serializable {
             node.entries = null;
         }
     }
-    private void deleteTableRecords(Table tableContainingIndex, IndexRecordInfo recordInfo, Octree index) {
-        PageMetaInfo pageMetaInfo = tableContainingIndex.getPagesInfo().get(recordInfo.getPageNumber());
-        Page page = Page.deserializePage(pageMetaInfo);
-        int requiredRecordIndexInPage = page.findRecordIndex(tableContainingIndex.getClusteringKey(), recordInfo.getClusteringKeyValue());
-        page.removeRecord(requiredRecordIndexInPage, tableContainingIndex.getClusteringKey());
-        if(! page.isEmpty()) {
-            Serializer.serialize(page.getPageInfo().getLocation(), page);
+
+    private class Point {
+        private int recordsInfoIndex, recordInfoIndex;
+        private int pageNumber;
+
+        public Point(int recordsInfoIndex, int recordInfoIndex, int pageNumber) {
+            this.recordsInfoIndex = recordsInfoIndex;
+            this.recordInfoIndex = recordInfoIndex;
+            this.pageNumber = pageNumber;
         }
-        else {
-            tableContainingIndex.removePageInfo(recordInfo.getPageNumber());
-            FileHandler.deleteFile(pageMetaInfo.getLocation());
-            Deletion.updateRecordsPageNumbersBelowDeletedPage(tableContainingIndex, recordInfo.getPageNumber(), index);
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Point point)) return false;
+            return pageNumber == point.pageNumber;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(pageNumber);
         }
     }
-    int deleteMatchingEntries(Table tableContainingIndex, Hashtable<String, Object> recordToDelete, boolean toDeleteTableRecords, Octree index) {
+    private Hashtable<Point, Set<Comparable>> getCombinedPagesInfoKeys() {
+        Hashtable<Point, Set<Comparable>> combinedPagesInfoKeys = new Hashtable<>();
+        for(int i = 0; i < entries.size(); i++) {
+            IndexRecordsInfo recordsInfo = entries.get(i);
+            for(int j = 0; j < recordsInfo.size(); j++) {
+                IndexRecordInfo recordInfo = recordsInfo.get(j);
+                Point dummyPoint = new Point(-1, -1, recordInfo.getPageNumber());
+                if(! combinedPagesInfoKeys.containsKey(dummyPoint)) {
+                    Set<Comparable> set = new HashSet<>();
+                    combinedPagesInfoKeys.put(new Point(i, j, recordInfo.getPageNumber()), set);
+                }
+                combinedPagesInfoKeys.get(dummyPoint).add(recordInfo.getClusteringKeyValue());
+            }
+        }
+        return combinedPagesInfoKeys;
+    }
+    int deleteMatchingEntries(Table tableContainingIndex, Hashtable<String, Object> recordToDelete) {
         int deletedRecords = 0;
-        for(int i = 0; i < entries.size(); ) {
-            IndexRecordsInfo entry = entries.get(i);
-            for(int j = 0; j < entry.size(); ) {
-                IndexRecordInfo recordInfo = entry.get(j);
-                Record record = Record.getRecord(tableContainingIndex, recordInfo);
+        Hashtable<Point, Set<Comparable>> combinedPagesInfoKeys = getCombinedPagesInfoKeys();
+        for(Point point: combinedPagesInfoKeys.keySet()) {
+            Page page = Page.deserializePage(tableContainingIndex.getPagesInfo().get(point.pageNumber));
+            for(Comparable clusteringKeyValue: combinedPagesInfoKeys.get(point)) {
+                int recordIndexInPage = page.findRecordIndex(tableContainingIndex.getClusteringKey(), clusteringKeyValue);
+                Record record = page.get(recordIndexInPage);
                 if(! record.hasMatchingValues(recordToDelete)) {
-                    j++;
                     continue;
                 }
-                entry.remove(j);
+                entries.get(point.recordsInfoIndex).remove(point.recordsInfoIndex);
                 deletedRecords++;
-                if(toDeleteTableRecords) {
-                    deleteTableRecords(tableContainingIndex, recordInfo, index);
+                if(entries.get(point.recordsInfoIndex).isEmpty()) {
+                    entries.remove(point.recordsInfoIndex);
                 }
-            }
-            if(entry.isEmpty()) {
-                entries.remove(i);
-            }
-            else {
-                i++;
             }
         }
         return deletedRecords;
     }
-    void updateRecordInfo(Table table, Record record, int newPageNumber) {
+    void updateAllRecordsPageNumber(int startingOverflownPageNumber) {
         for(IndexRecordsInfo entry: entries) {
             for(IndexRecordInfo recordInfo: entry) {
-                if(record.get(table.getClusteringKey()).equals(recordInfo.getClusteringKeyValue())) {
+                if(recordInfo.getPageNumber() > startingOverflownPageNumber) {
+                    recordInfo.setPageNumber(recordInfo.getPageNumber() - 1);
+                }
+            }
+        }
+    }
+    void updateRecordPageNumber(String tableClusteringKey, Record record, int newPageNumber) {
+        for(IndexRecordsInfo entry: entries) {
+            for(IndexRecordInfo recordInfo: entry) {
+                if(record.get(tableClusteringKey).equals(recordInfo.getClusteringKeyValue())) {
                     recordInfo.setPageNumber(newPageNumber);
-                    return;
                 }
             }
         }
@@ -218,13 +245,29 @@ class OctreeNode implements Serializable {
                 ", children=" + Arrays.toString(children) +
                 '}';
     }
-
+    private Hashtable<Integer, Set<Comparable>> getCombinedPagesKeys() {
+        Hashtable<Integer, Set<Comparable>> combinedPageKeys = new Hashtable<>();
+        for(IndexRecordsInfo entry: entries) {
+            for(IndexRecordInfo recordInfo: entry) {
+                if(! combinedPageKeys.containsKey(recordInfo.getPageNumber())) {
+                    Set<Comparable> keys = new HashSet<>();
+                    combinedPageKeys.put(recordInfo.getPageNumber(), keys);
+                }
+                combinedPageKeys.get(recordInfo.getPageNumber()).add(recordInfo.getClusteringKeyValue());
+            }
+        }
+        return combinedPageKeys;
+    }
 
     List<Record> getMatchingRecordsIterator(Table table, SelectFromTableParams params) {
         List<Record> matchingRecords = new ArrayList<>();
-        for(IndexRecordsInfo entry: entries) {
-            for(IndexRecordInfo recordInfo: entry) {
-                Record record = Record.getRecord(table, recordInfo);
+        Hashtable<Integer, Set<Comparable>> combinedPagesKeys = getCombinedPagesKeys();
+        for(int pageNumber: combinedPagesKeys.keySet()) {
+            Page page = Page.deserializePage(table.getPagesInfo().get(pageNumber));
+            Set<Comparable> currentPageKeys = combinedPagesKeys.get(pageNumber);
+            for(Comparable clusteringKeyValue: currentPageKeys) {
+                int recordIndexInPage = page.findRecordIndex(table.getClusteringKey(), clusteringKeyValue);
+                Record record = page.get(recordIndexInPage);
                 if(record.isMatchingRecord(params)) {
                     matchingRecords.add(record);
                 }

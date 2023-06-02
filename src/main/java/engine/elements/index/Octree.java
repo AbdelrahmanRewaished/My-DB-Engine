@@ -72,19 +72,17 @@ public class Octree implements Serializable {
     }
 
 
-    public int deleteMatchingRecords(Table table, Hashtable<String, Object> recordToDelete, boolean toDeleteTableRecords) {
+    public void deleteMatchingRecords(Table table, Hashtable<String, Object> recordToDelete) {
         if(root == null) {
-            return 0;
+            return;
         }
-        int deletedRecords = deletionHelper(table, root, recordToDelete, toDeleteTableRecords);
+        deletionHelper(table, root, recordToDelete);
         if(root.getEntries() != null && root.getEntries().isEmpty()) {
             root = null;
         }
-        return deletedRecords;
     }
 
-    private int deletionHelper(Table table, OctreeNode node, Hashtable<String, Object> recordToDelete, boolean toDeleteTableRecords) {
-        int deletedRecords = 0;
+    private void deletionHelper(Table table, OctreeNode node, Hashtable<String, Object> recordToDelete) {
         Stack<OctreeNode> stack = new Stack<>();
         stack.push(node);
         while(! stack.isEmpty()) {
@@ -96,38 +94,16 @@ public class Octree implements Serializable {
                 if (!child.isALeaf()) {
                     stack.push(child);
                 } else if(! child.getEntries().isEmpty()){
-                     deletedRecords += child.deleteMatchingEntries(table, recordToDelete, toDeleteTableRecords, this);
+                     child.deleteMatchingEntries(table, recordToDelete);
                 }
             }
             if (currentNode.isHavingLeafChildren() && currentNode.isUnderFlown()) {
                 currentNode.nullifyChildren();
             }
         }
-        return deletedRecords;
     }
     public void deleteAllEntries() {
         root = null;
-    }
-    public int updateRecordWithPrimaryKey(Table table, Comparable clusteringKeyValue, Hashtable<String, Object> colNameValue) throws DBAppException {
-        if(root == null) {
-            return 0;
-        }
-        int requiredPageIndex = table.findPageIndexToLookIn(clusteringKeyValue);
-        if(requiredPageIndex == -1) {
-            return 0;
-        }
-        PageMetaInfo pageMetaInfo = table.getPagesInfo().get(requiredPageIndex);
-        Page page = Page.deserializePage(pageMetaInfo);
-        int requiredRecordIndex = page.findRecordIndex(table.getClusteringKey(), clusteringKeyValue);
-        if(requiredRecordIndex == -1) {
-            return 0;
-        }
-        Record recordToDelete = page.get(requiredRecordIndex);
-        deleteMatchingRecords(table, recordToDelete, false);
-        recordToDelete.updateValues(colNameValue);
-        Serializer.serialize(pageMetaInfo.getLocation(), page);
-        insert(table, new IndexRecordInfo((Comparable) recordToDelete.get(table.getClusteringKey()), requiredPageIndex));
-        return 1;
     }
     public int updateAllRecords(Table table) throws DBAppException {
         if(root == null) {
@@ -146,26 +122,39 @@ public class Octree implements Serializable {
         }
         return updatedRecords;
     }
-    public void updateRecordPageNumber(Table table, Record record, int newPageNumber) {
+    public void updateAllRecordsPageNumber(int startingOverflowPageNumber) {
         if(root == null) {
             return;
         }
-        OctreeNode currentNode = root;
-        while(true) {
+        Stack<OctreeNode> stack = new Stack<>();
+        stack.push(root);
+        while(! stack.isEmpty()) {
+            OctreeNode currentNode = stack.pop();
             if(currentNode.isALeaf()) {
-                currentNode.updateRecordInfo(table, record, newPageNumber);
-                return;
+                currentNode.updateAllRecordsPageNumber(startingOverflowPageNumber);
+                continue;
             }
-            boolean childFound = false;
             for(OctreeNode child: currentNode.getChildren()) {
-                if(child.getBoundary().isRecordInBounds(record)) {
-                    currentNode = child;
-                    childFound = true;
-                    break;
-                }
+                stack.push(child);
             }
-            if(! childFound) {
-                break;
+        }
+    }
+    public void updateRecordPageNumber(String tableClusteringKey, Record nextRecord, int nextPageIndex) {
+        if(root == null) {
+            return;
+        }
+        Stack<OctreeNode> stack = new Stack<>();
+        stack.push(root);
+        while(! stack.isEmpty()) {
+            OctreeNode currentNode = stack.pop();
+            if(currentNode.isALeaf()) {
+                currentNode.updateRecordPageNumber(tableClusteringKey, nextRecord, nextPageIndex);
+                continue;
+            }
+            for(OctreeNode child: currentNode.getChildren()) {
+                if(child.getBoundary().isRecordInBounds(nextRecord)) {
+                    stack.push(child);
+                }
             }
         }
     }
@@ -220,5 +209,7 @@ public class Octree implements Serializable {
         }
         System.out.println();
     }
+
+
 }
 

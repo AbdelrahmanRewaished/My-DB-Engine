@@ -20,7 +20,6 @@ public class DeleteRecordsOnValuesWithIndex implements DeletionStrategy{
     }
 
     public synchronized int deleteFromTable() {
-        int deletedRecords = 0;
         Hashtable<String, Object> colNameValue = params.getColNameValue();
         if(params.getColNameValue().containsKey(table.getClusteringKey())) {
             Object clusteringKeyValue = colNameValue.get(table.getClusteringKey());
@@ -37,13 +36,13 @@ public class DeleteRecordsOnValuesWithIndex implements DeletionStrategy{
             if(! page.get(requiredRecordIndex).hasMatchingValues(colNameValue)) {
                 return 0;
             }
-            colNameValue = page.get(requiredPageIndex);
+            colNameValue = page.get(requiredRecordIndex);
         }
         for(IndexMetaInfo indexMetaInfo: table.getIndicesInfo()) {
             Octree index = Octree.deserializeIndex(indexMetaInfo);
-            deletedRecords = index.deleteMatchingRecords(table, colNameValue, true);
+            index.deleteMatchingRecords(table, colNameValue);
             Serializer.serialize(indexMetaInfo.getIndexFileLocation(), index);
         }
-        return deletedRecords;
+        return new DeleteAllMatchingRecords(params, table).deleteFromTable();
     }
 }

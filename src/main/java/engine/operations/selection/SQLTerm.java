@@ -10,6 +10,10 @@ public class SQLTerm {
     public String _strTableName, _strColumnName, _strOperator;
     public Object _objValue;
 
+    public SQLTerm() {
+
+    }
+
     public boolean isValidSqlTerm() {
         return _strTableName != null &&
                 (_strColumnName != null && _strOperator != null && _objValue != null ||

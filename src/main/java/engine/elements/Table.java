@@ -1,6 +1,7 @@
 package engine.elements;
 
 import engine.elements.index.IndexMetaInfo;
+import engine.elements.index.IndexRecordInfo;
 import engine.elements.index.Octree;
 import utilities.serialization.Serializer;
 
@@ -109,15 +110,18 @@ public class Table implements Serializable {
     public boolean isHavingIndices() {
         return ! indicesInfo.isEmpty();
     }
-    public void updateRecordPageNumberInIndices(Record record, int newPageNumber) {
-        for(IndexMetaInfo indexMetaInfo: getIndicesInfo()) {
+    public void updateAllRecordsPageNumberInIndices(int startingOverflownPageIndex) {
+        for(IndexMetaInfo indexMetaInfo: indicesInfo) {
             Octree index = Octree.deserializeIndex(indexMetaInfo);
-            index.updateRecordPageNumber(this, record, newPageNumber);
+            index.updateAllRecordsPageNumber(startingOverflownPageIndex);
             Serializer.serialize(indexMetaInfo.getIndexFileLocation(), index);
         }
     }
-    public void updateRecordPageNumberInIndex(Record record, int newPageNumber, Octree index) {
-        index.updateRecordPageNumber(this, record, newPageNumber);
+    public void updateRecordPageNumberInIndices(Record nextRecord, int nextPageIndex) {
+        for(IndexMetaInfo indexMetaInfo: indicesInfo) {
+            Octree index =  Octree.deserializeIndex(indexMetaInfo);
+            index.updateRecordPageNumber(clusteringKey, nextRecord, nextPageIndex);
+        }
     }
     @Override
     public String toString() {
@@ -128,4 +132,6 @@ public class Table implements Serializable {
                 ", clusteringKey='" + clusteringKey + '\'' +
                 '}';
     }
+
+
 }

@@ -1,7 +1,7 @@
 package engine;
 
-import compiler.SQLLexer;
-import compiler.SQLParser;
+import parser.SQLLexer;
+import parser.SQLParser;
 import engine.elements.Record;
 import engine.exceptions.ColumnDoesNotExistException;
 import engine.exceptions.DBAppException;
